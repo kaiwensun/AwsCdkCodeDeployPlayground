@@ -8,6 +8,7 @@ target
 *.iml
 tmp/
 **/.DS_Store
+**/blob.txt
 
 # CDK asset staging directory
 .cdk.staging

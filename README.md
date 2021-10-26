@@ -1,18 +1,35 @@
-# Welcome to your CDK Java project!
+### Prerequisites
+* Python3, Java, Maven
+* cdk (`npm install -g aws-cdk`)
+* Set default aws region to us-east-1
+* Create an EC2 key pair named `us-east-1-ec2-keypair`, and put the `us-east-1-ec2-keypair.pem` ssh key pair in ~/.ssh locally
 
-This is a blank project for Java development with CDK.
+### Setup infra
+(The bootstrap needs to run only once. No need to run again in the future.)
+```
+ACCOUNT_ID=`aws sts get-caller-identity --query Account --output text`
+cdk bootstrap "aws://$ACCOUNT_ID/us-east-1"
+```
+after bootstrap or local code change, then create infra by running:
+```
+cdk deploy
+```
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+### Create Deployment
+```
+./bin/create-deployment.sh
+```
 
-It is a [Maven](https://maven.apache.org/) based project, so you can open this project with any Maven compatible Java IDE to build and run tests.
+It will output deployment id. Log into AWS console and ssh into EC2 instance to monitor.
 
-## Useful commands
+run `./bin/ssh-ec2/sh` can quickly ssh into the EC2 instance.
 
- * `mvn package`     compile and run tests
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
+### To destroy the EC2 host and spin up a new one
 
-Enjoy!
+```
+./bin/terminate-asg-hosts.sh
+```
+
+This terminates the EC2 in the ASG, and waits a new EC2 instance to be launched by ASG and deployed by CodeDeploy. 
+
+This requires a healthy last-successfully-deployed revision.

@@ -4,8 +4,12 @@ import software.amazon.awscdk.core.Construct;
 import software.amazon.awscdk.core.Stack;
 import software.amazon.awscdk.core.StackProps;
 import software.amazon.awscdk.services.autoscaling.AutoScalingGroup;
+import software.amazon.awscdk.services.autoscaling.BlockDevice;
+import software.amazon.awscdk.services.autoscaling.BlockDeviceVolume;
 import software.amazon.awscdk.services.codedeploy.ServerApplication;
 import software.amazon.awscdk.services.codedeploy.ServerDeploymentGroup;
+import software.amazon.awscdk.services.ec2.AmazonLinuxGeneration;
+import software.amazon.awscdk.services.ec2.AmazonLinuxImageProps;
 import software.amazon.awscdk.services.ec2.IVpc;
 import software.amazon.awscdk.services.ec2.InstanceClass;
 import software.amazon.awscdk.services.ec2.InstanceSize;
@@ -51,17 +55,31 @@ public class HelloCdkStack extends Stack {
         // install CodeDeploy agent
         userData.addCommands(
                 "sudo yum update",
-                "sudo yum install ruby",
                 "sudo yum install wget",
 
-                "CODEDEPLOY_BIN=\"/opt/codedeploy-agent/bin/codedeploy-agent\"",
-                "$CODEDEPLOY_BIN stop",
-                "yum erase codedeploy-agent -y",
+                // if don't care about ruby version, (may as old as ruby2.0)
+                "sudo yum install ruby",
+                // if need to install ruby2.6, uncomment below
+                // "sudo yum install amazon-linux-extras",
+                // "sudo amazon-linux-extras install ruby2.6",
 
+                "# download codedeploy agent installer",
                 "cd /home/ec2-user",
                 String.format("wget https://aws-codedeploy-%s.s3.%s.amazonaws.com/latest/install", REGION, REGION),
                 "chmod +x ./install",
-                "sudo ./install auto"
+
+                /* if want to install the latest version */
+                // "sudo ./install auto",
+
+                /* if want to install a specific version */
+                "# erase any pre-installed codedeploy agent",
+                "sudo yum erase codedeploy-agent",
+                "# install specific version of codedeploy agent",
+                "sudo ./install auto -v releases/codedeploy-agent-1.3.1-1880.noarch.rpm",
+
+                "# enable debug level log",
+                "sudo sed -e 's/:verbose: false/:verbose: true/' /etc/codedeploy-agent/conf/codedeployagent.yml",
+                "sudo service codedeploy-agent restart"
         );
 
         IVpc vpc = Vpc.fromLookup(this, "VPC", VpcLookupOptions.builder()
@@ -82,7 +100,11 @@ public class HelloCdkStack extends Stack {
                 .autoScalingGroupName(ASG_NAME)
                 .keyName(KEY_PAIR_NAME)
                 .instanceType(instanceType)
-                .machineImage(MachineImage.latestAmazonLinux())
+                .machineImage(MachineImage.latestAmazonLinux(
+                        AmazonLinuxImageProps.builder()
+                        .generation(AmazonLinuxGeneration.AMAZON_LINUX)
+                        .build()
+                        ))
                 .securityGroup(securityGroup)
                 .role(ec2InstanceProfileRole)
                 .userData(userData)
