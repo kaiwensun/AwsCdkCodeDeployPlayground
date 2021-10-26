@@ -1,18 +1,18 @@
 package com.myorg;
 
 import software.amazon.awscdk.core.Construct;
-import software.amazon.awscdk.core.RemovalPolicy;
 import software.amazon.awscdk.core.Stack;
 import software.amazon.awscdk.core.StackProps;
 import software.amazon.awscdk.services.autoscaling.AutoScalingGroup;
 import software.amazon.awscdk.services.codedeploy.ServerApplication;
 import software.amazon.awscdk.services.codedeploy.ServerDeploymentGroup;
-import software.amazon.awscdk.services.ec2.ISecurityGroup;
 import software.amazon.awscdk.services.ec2.IVpc;
 import software.amazon.awscdk.services.ec2.InstanceClass;
 import software.amazon.awscdk.services.ec2.InstanceSize;
 import software.amazon.awscdk.services.ec2.InstanceType;
 import software.amazon.awscdk.services.ec2.MachineImage;
+import software.amazon.awscdk.services.ec2.Peer;
+import software.amazon.awscdk.services.ec2.Port;
 import software.amazon.awscdk.services.ec2.SecurityGroup;
 import software.amazon.awscdk.services.ec2.UserData;
 import software.amazon.awscdk.services.ec2.Vpc;
@@ -28,9 +28,9 @@ import java.util.Collections;
 public class HelloCdkStack extends Stack {
 
     private final static InstanceType instanceType = InstanceType.of(InstanceClass.BURSTABLE3, InstanceSize.NANO);
-    private final static String SECURITY_GROUP_ID = "sg-0061dfb13642c7d0a";  // ssh only, in us-east-1
     private final static String REGION = "us-east-1";
     private final static String KEY_PAIR_NAME = String.format("%s-ec2-keypair", REGION);
+    private final static String ASG_NAME = "CdkManagedCodeDeployPlaygroundFleet";
 
     public HelloCdkStack(final Construct scope, final String id) {
         this(scope, id, null);
@@ -38,8 +38,6 @@ public class HelloCdkStack extends Stack {
 
     public HelloCdkStack(final Construct scope, final String id, final StackProps props) {
         super(scope, id, props);
-
-        ISecurityGroup securityGroup = SecurityGroup.fromSecurityGroupId(this, "SecurityGroup", SECURITY_GROUP_ID);
 
         Role ec2InstanceProfileRole = Role.Builder.create(this, "InstanceProfile")
                 .description("EC2 Instance Profile for CodeDeploy agent, managed by CDK")
@@ -70,7 +68,18 @@ public class HelloCdkStack extends Stack {
                 .isDefault(true)
                 .build());
 
+        SecurityGroup securityGroup = SecurityGroup.Builder
+                .create(this, "sg")
+                .securityGroupName("SshAndWeb")
+                .description("Managed by CDK. Open ports: SSH, HTTP, HTTPS")
+                .vpc(vpc)
+                .build();
+        for (int port : new int[]{22, 80, 443}) {
+            securityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(port));
+        }
+
         AutoScalingGroup asg = AutoScalingGroup.Builder.create(this, "ASG")
+                .autoScalingGroupName(ASG_NAME)
                 .keyName(KEY_PAIR_NAME)
                 .instanceType(instanceType)
                 .machineImage(MachineImage.latestAmazonLinux())
@@ -79,13 +88,21 @@ public class HelloCdkStack extends Stack {
                 .userData(userData)
                 .vpc(vpc)
                 .build();
-        ServerApplication application = ServerApplication.Builder.create(this, "Application").build();
+        final String applicationName = "CdkManagedServerApplication";
+        final String deploymentGroupName = "CdkManagedServerDeploymentGroup";
+        ServerApplication application = ServerApplication.Builder
+                .create(this, applicationName)
+                .applicationName(applicationName)
+                .build();
         ServerDeploymentGroup deploymentGroup = ServerDeploymentGroup.Builder
-                .create(this, "DeploymentGroup")
+                .create(this, deploymentGroupName)
+                .deploymentGroupName(deploymentGroupName)
+                .application(application)
                 .autoScalingGroups(Collections.singletonList(asg))
                 .build();
-
-        Bucket.Builder.create(this, String.format("MyCodeDeployServerApplicationRevisionBucket-%s", REGION))
+        String bucketName = String.format("my-codedeploy.server-application.revisions.%s", REGION);
+        Bucket.Builder.create(this, "RevisionBucket")
+                .bucketName(bucketName)
                 .versioned(true)
                 .build();
     }

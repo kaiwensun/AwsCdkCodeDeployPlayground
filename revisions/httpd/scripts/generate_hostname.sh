@@ -1,0 +1,1 @@
+hostname > /var/www/html/hostname.html
