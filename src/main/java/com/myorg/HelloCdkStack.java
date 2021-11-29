@@ -4,8 +4,6 @@ import software.amazon.awscdk.core.Construct;
 import software.amazon.awscdk.core.Stack;
 import software.amazon.awscdk.core.StackProps;
 import software.amazon.awscdk.services.autoscaling.AutoScalingGroup;
-import software.amazon.awscdk.services.autoscaling.BlockDevice;
-import software.amazon.awscdk.services.autoscaling.BlockDeviceVolume;
 import software.amazon.awscdk.services.codedeploy.ServerApplication;
 import software.amazon.awscdk.services.codedeploy.ServerDeploymentGroup;
 import software.amazon.awscdk.services.ec2.AmazonLinuxGeneration;

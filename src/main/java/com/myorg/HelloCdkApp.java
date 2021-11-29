@@ -10,12 +10,15 @@ public class HelloCdkApp {
     public static void main(final String[] args) {
         App app = new App();
 
-        new HelloCdkStack(app, "HelloCdkStack", StackProps.builder()
+        StackProps.Builder stackPropsBuilder = StackProps.builder()
                 .env(Environment.builder()
                         .account(System.getenv("CDK_DEFAULT_ACCOUNT"))
                         .region(System.getenv("CDK_DEFAULT_REGION"))
-                        .build())
-                .build());
+                        .build());
+
+//        new HelloCdkStack(app, "HelloCdkStack", stackPropsBuilder.stackName("HelloCdkStack").build());
+
+        new EcsServiceStack(app, "CdkEcsServiceStack", stackPropsBuilder.stackName("CdkEcsServiceStack").build());
 
         app.synth();
     }
