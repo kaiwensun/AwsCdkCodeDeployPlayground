@@ -10,8 +10,8 @@ CD_DEPLOYMENTGROUP_NAME=CdkManagedServerDeploymentGroup
 
 set -e
 pushd $( dirname "${BASH_SOURCE[0]}" )/.. > /dev/null
-
-revisionS3Location="s3://${BUCKET_NAME}/${SOFTWARE}/${SOFTWARE}"
+s3key=${SOFTWARE}/${SOFTWARE}
+revisionS3Location="s3://${BUCKET_NAME}/${s3key}"
 mkdir -p tmp
 
 # pack latest revision
@@ -23,13 +23,14 @@ popd
 # upload to S3
 echo "Uploading to ${revisionS3Location}"
 aws s3 cp "tmp/${SOFTWARE}.zip" "${revisionS3Location}"
+aws s3api put-object-tagging --bucket ${BUCKET_NAME} --key ${s3key} --tagging '{"TagSet": [{ "Key": "UseWithCodeDeploy", "Value": "true" }]}'
 
 # create deployment
 revision='{
   "revisionType": "S3",
   "s3Location": {
     "bucket": "'"${BUCKET_NAME}"'",
-    "key": "'"${SOFTWARE}/${SOFTWARE}"'",
+    "key": "'"${s3key}"'",
     "bundleType": "zip"
   }
 }'

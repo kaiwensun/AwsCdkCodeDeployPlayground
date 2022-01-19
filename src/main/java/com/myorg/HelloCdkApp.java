@@ -16,9 +16,9 @@ public class HelloCdkApp {
                         .region(System.getenv("CDK_DEFAULT_REGION"))
                         .build());
 
-//        new HelloCdkStack(app, "HelloCdkStack", stackPropsBuilder.stackName("HelloCdkStack").build());
+       new HelloCdkStack(app, "HelloCdkStack", stackPropsBuilder.stackName("HelloCdkStack").build());
 
-        new EcsServiceStack(app, "CdkEcsServiceStack", stackPropsBuilder.stackName("CdkEcsServiceStack").build());
+        // new EcsServiceStack(app, "CdkEcsServiceStack", stackPropsBuilder.stackName("CdkEcsServiceStack").build());
 
         app.synth();
     }

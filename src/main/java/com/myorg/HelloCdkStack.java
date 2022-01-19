@@ -45,7 +45,7 @@ public class HelloCdkStack extends Stack {
                 .description("EC2 Instance Profile for CodeDeploy agent, managed by CDK")
                 .assumedBy(ServicePrincipal.Builder.create("ec2.amazonaws.com").build())
                 .managedPolicies(Collections.singletonList(
-                        ManagedPolicy.fromAwsManagedPolicyName("service-role/AmazonEC2RoleforAWSCodeDeploy")))
+                        ManagedPolicy.fromAwsManagedPolicyName("service-role/AmazonEC2RoleforAWSCodeDeployLimited")))
                 .build();
 
         UserData userData = UserData.forLinux();
@@ -67,13 +67,13 @@ public class HelloCdkStack extends Stack {
                 "chmod +x ./install",
 
                 /* if want to install the latest version */
-                // "sudo ./install auto",
+                "sudo ./install auto",
 
-                /* if want to install a specific version */
-                "# erase any pre-installed codedeploy agent",
-                "sudo yum erase codedeploy-agent",
-                "# install specific version of codedeploy agent",
-                "sudo ./install auto -v releases/codedeploy-agent-1.3.1-1880.noarch.rpm",
+                /* else, if want to install a specific version */
+                // "# erase any pre-installed codedeploy agent",
+                // "sudo yum erase codedeploy-agent",
+                // "# install specific version of codedeploy agent",
+                // "sudo ./install auto -v releases/codedeploy-agent-1.3.1-1880.noarch.rpm",
 
                 "# enable debug level log",
                 "sudo sed -e 's/:verbose: false/:verbose: true/' /etc/codedeploy-agent/conf/codedeployagent.yml",
