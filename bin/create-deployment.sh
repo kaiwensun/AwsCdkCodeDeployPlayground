@@ -3,14 +3,16 @@
 set -e
 
 SOFTWARE=httpd
-REGION=`aws configure get region`
-BUCKET_NAME="my-codedeploy.server-application.revisions.${REGION}"
+REGION=${AWS_DEFAULT_REGION}
+ACCOUNT=`aws sts get-caller-identity --query Account --output text`
+
+BUCKET_NAME="codedeploy-playground.revisions.${ACCOUNT}.${REGION}"
 CD_APPLICATION_NAME=CdkManagedServerApplication
 CD_DEPLOYMENTGROUP_NAME=CdkManagedServerDeploymentGroup
 
 set -e
 pushd $( dirname "${BASH_SOURCE[0]}" )/.. > /dev/null
-s3key=${SOFTWARE}/${SOFTWARE}
+s3key=server/${SOFTWARE}/${SOFTWARE}
 revisionS3Location="s3://${BUCKET_NAME}/${s3key}"
 mkdir -p tmp
 

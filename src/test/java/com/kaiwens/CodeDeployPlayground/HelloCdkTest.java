@@ -1,13 +1,8 @@
-package com.myorg;
+package com.kaiwens.CodeDeployPlayground;
 
-import software.amazon.awscdk.core.App;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import java.io.IOException;
-
-import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class HelloCdkTest {
@@ -17,7 +12,7 @@ public class HelloCdkTest {
 //    @Test
 //    public void testStack() throws IOException {
 //        App app = new App();
-//        HelloCdkStack stack = new HelloCdkStack(app, "test");
+//        ServerDeploymentStack stack = new ServerDeploymentStack(app, "test");
 //
 //        // synthesize the stack to a CloudFormation template
 //        JsonNode actual = JSON.valueToTree(app.synth().getStackArtifact(stack.getArtifactId()).getTemplate());

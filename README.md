@@ -15,6 +15,19 @@ after bootstrap or local code change, then create infra by running:
 cdk deploy
 ```
 
+### Setup environment variables
+```
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+
+export AWS_REGION="us-east-1"
+export AWS_DEFAULT_REGION=$AWS_REGION
+```
+or
+```
+source ./bin/export-profile.sh <cli profile name>
+```
+
 ### Create Deployment
 ```
 ./bin/create-deployment.sh

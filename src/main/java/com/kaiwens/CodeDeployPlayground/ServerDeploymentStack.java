@@ -1,4 +1,4 @@
-package com.myorg;
+package com.kaiwens.CodeDeployPlayground;
 
 import software.amazon.awscdk.core.Construct;
 import software.amazon.awscdk.core.Stack;
@@ -23,23 +23,34 @@ import software.amazon.awscdk.services.iam.ManagedPolicy;
 import software.amazon.awscdk.services.iam.Role;
 import software.amazon.awscdk.services.iam.ServicePrincipal;
 import software.amazon.awscdk.services.s3.Bucket;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.CreateKeyPairRequest;
+import software.amazon.awssdk.services.ec2.model.CreateKeyPairResponse;
+import software.amazon.awssdk.services.ec2.model.DescribeKeyPairsRequest;
+import software.amazon.awssdk.services.ec2.model.DescribeKeyPairsResponse;
+import software.amazon.awssdk.services.ec2.model.Ec2Exception;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collections;
 
 
-public class HelloCdkStack extends Stack {
+public class ServerDeploymentStack extends Stack {
 
     private final static InstanceType instanceType = InstanceType.of(InstanceClass.BURSTABLE3, InstanceSize.NANO);
-    private final static String REGION = "us-east-1";
-    private final static String KEY_PAIR_NAME = String.format("%s-ec2-keypair", REGION);
     private final static String ASG_NAME = "CdkManagedCodeDeployPlaygroundFleet";
 
-    public HelloCdkStack(final Construct scope, final String id) {
+    public ServerDeploymentStack(final Construct scope, final String id) {
         this(scope, id, null);
     }
 
-    public HelloCdkStack(final Construct scope, final String id, final StackProps props) {
+    public ServerDeploymentStack(final Construct scope, final String id, final StackProps props) {
         super(scope, id, props);
+        String region = props.getEnv().getRegion();
+        String account = props.getEnv().getAccount();
+        String keyPairName = String.format("%s-%s-ec2-keypair", account, region);
+        createKeyPairIfAbsent(keyPairName);
 
         Role ec2InstanceProfileRole = Role.Builder.create(this, "InstanceProfile")
                 .description("EC2 Instance Profile for CodeDeploy agent, managed by CDK")
@@ -63,7 +74,7 @@ public class HelloCdkStack extends Stack {
 
                 "# download codedeploy agent installer",
                 "cd /home/ec2-user",
-                String.format("wget https://aws-codedeploy-%s.s3.%s.amazonaws.com/latest/install", REGION, REGION),
+                String.format("wget https://aws-codedeploy-%s.s3.%s.amazonaws.com/latest/install", region, region),
                 "chmod +x ./install",
 
                 /* if want to install the latest version */
@@ -87,7 +98,7 @@ public class HelloCdkStack extends Stack {
         SecurityGroup securityGroup = SecurityGroup.Builder
                 .create(this, "sg")
                 .securityGroupName("SshAndWeb")
-                .description("Managed by CDK. Open ports: SSH, HTTP, HTTPS")
+                .description(String.format("Managed by CDK stack %s. Open ports: SSH, HTTP, HTTPS", props.getStackName()))
                 .vpc(vpc)
                 .build();
         for (int port : new int[]{22, 80, 443}) {
@@ -96,13 +107,13 @@ public class HelloCdkStack extends Stack {
 
         AutoScalingGroup asg = AutoScalingGroup.Builder.create(this, "ASG")
                 .autoScalingGroupName(ASG_NAME)
-                .keyName(KEY_PAIR_NAME)
+                .keyName(keyPairName)
                 .instanceType(instanceType)
                 .machineImage(MachineImage.latestAmazonLinux(
                         AmazonLinuxImageProps.builder()
-                        .generation(AmazonLinuxGeneration.AMAZON_LINUX)
-                        .build()
-                        ))
+                                .generation(AmazonLinuxGeneration.AMAZON_LINUX)
+                                .build()
+                ))
                 .securityGroup(securityGroup)
                 .role(ec2InstanceProfileRole)
                 .userData(userData)
@@ -114,16 +125,49 @@ public class HelloCdkStack extends Stack {
                 .create(this, applicationName)
                 .applicationName(applicationName)
                 .build();
-        ServerDeploymentGroup deploymentGroup = ServerDeploymentGroup.Builder
+        ServerDeploymentGroup.Builder
                 .create(this, deploymentGroupName)
                 .deploymentGroupName(deploymentGroupName)
                 .application(application)
                 .autoScalingGroups(Collections.singletonList(asg))
                 .build();
-        String bucketName = String.format("my-codedeploy.server-application.revisions.%s", REGION);
+        String bucketName = String.format("codedeploy-playground.revisions.%s.%s", account, region);
         Bucket.Builder.create(this, "RevisionBucket")
                 .bucketName(bucketName)
                 .versioned(true)
                 .build();
+    }
+
+    private void createKeyPairIfAbsent(final String keyPairName) {
+
+        try (Ec2Client ec2 = Ec2Client.create()) {
+            try {
+                ec2.describeKeyPairs(DescribeKeyPairsRequest.builder()
+                        .keyNames(keyPairName)
+                        .build());
+            } catch (Ec2Exception e) {
+                if ("InvalidKeyPair.NotFound".equals(e.awsErrorDetails().errorCode())) {
+                    String keyFilePath = String.format("%s/.ssh/%s.pem", System.getProperty("user.home"), keyPairName);
+                    System.out.println(String.format("Creating ec2 keypair %s and putting the private key in %s", keyPairName, keyFilePath));
+                    File keyFile = new File(keyFilePath);
+                    try {
+                        keyFile.createNewFile();
+                        try (FileWriter keyFileWriter = new FileWriter(keyFilePath)) {
+                            CreateKeyPairResponse createResp = ec2.createKeyPair(CreateKeyPairRequest.builder()
+                                    .keyName(keyPairName)
+                                    .build());
+
+                            keyFileWriter.write(createResp.keyMaterial());
+                        }
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    keyFile.setReadable(false, false);
+                    keyFile.setReadable(true, true);
+                    keyFile.setExecutable(false, false);
+                    keyFile.setWritable(false, false);
+                }
+            }
+        }
     }
 }

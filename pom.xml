@@ -30,11 +30,22 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <mainClass>com.myorg.HelloCdkApp</mainClass>
+                    <mainClass>com.kaiwens.CodeDeployPlayground.CdkApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>2.15.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- AWS Cloud Development Kit -->
@@ -72,6 +83,16 @@
             <groupId>software.amazon.awscdk</groupId>
             <artifactId>ecs-patterns</artifactId>
             <version>${cdk.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>ec2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sts</artifactId>
         </dependency>
 
         <dependency>
