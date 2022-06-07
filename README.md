@@ -37,7 +37,7 @@ It will output deployment id. Log into AWS console and ssh into EC2 instance to 
 
 run `./bin/ssh-ec2/sh` can quickly ssh into the EC2 instance.
 
-### To destroy the EC2 host and spin up a new one
+### Destroy the EC2 host and spin up a new one
 
 ```
 ./bin/terminate-asg-hosts.sh
@@ -48,3 +48,16 @@ This terminates the EC2 in the ASG, and waits a new EC2 instance to be launched 
 ~~This requires a healthy last-successfully-deployed revision.~~
 
 This temporarily detaches ASG hook from deployment group, so no deployment to new instance.
+
+### Modify ELB type
+
+Update the LBType passed into `ServerDeploymentStack`.
+
+### Open web page hosted by the deployment target
+
+Using the DNS of the access point.
+
+```
+./bin/open-web [ALB|NLB|TG|CLB|EC2]
+```
+The optional access point type defaults to `EC2`. 

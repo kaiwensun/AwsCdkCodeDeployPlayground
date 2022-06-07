@@ -8,7 +8,7 @@ LB_TYPE=$1
 
 function ec2_url() {
   instanceId=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names $ASG_NAME --query 'AutoScalingGroups[0].Instances[?LifecycleState == `InService` && HealthStatus == `Healthy`]'.InstanceId --output text)
-  DNS=`ec2 describe-instances --instance-ids $instanceId --query Reservations[0].Instances[0].PublicDnsName --output text`
+  DNS=`aws ec2 describe-instances --instance-ids $instanceId --query Reservations[0].Instances[0].PublicDnsName --output text`
   echo "$DNS"
 }
 
@@ -19,11 +19,18 @@ function elbv2_url() {
   echo "$DNS"
 }
 
+function elbv1_url() {
+  lbName=`aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names $ASG_NAME --query AutoScalingGroups[0].LoadBalancerNames[0] --output text`
+  DNS=`aws elb describe-load-balancers --load-balancer-names $lbName --query LoadBalancerDescriptions[0].DNSName --output text`
+  echo "$DNS"
+}
+
 case $LB_TYPE in
   ALB|NLB|TG)
     url=`elbv2_url`
   ;;
   CLB)
+    url=`elbv1_url`
   ;;
   *)
     url=`ec2_url`

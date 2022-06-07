@@ -21,13 +21,21 @@ import software.amazon.awscdk.services.ec2.SecurityGroup;
 import software.amazon.awscdk.services.ec2.UserData;
 import software.amazon.awscdk.services.ec2.Vpc;
 import software.amazon.awscdk.services.ec2.VpcLookupOptions;
+import software.amazon.awscdk.services.elasticloadbalancing.LoadBalancerListener;
+import software.amazon.awscdk.services.elasticloadbalancing.LoadBalancingProtocol;
 import software.amazon.awscdk.services.elasticloadbalancingv2.AddApplicationTargetsProps;
+import software.amazon.awscdk.services.elasticloadbalancingv2.AddNetworkTargetsProps;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationListener;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationLoadBalancer;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationProtocol;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationTargetGroup;
 import software.amazon.awscdk.services.elasticloadbalancingv2.BaseApplicationListenerProps;
+import software.amazon.awscdk.services.elasticloadbalancingv2.BaseNetworkListenerProps;
 import software.amazon.awscdk.services.elasticloadbalancingv2.HealthCheck;
+import software.amazon.awscdk.services.elasticloadbalancingv2.NetworkListener;
+import software.amazon.awscdk.services.elasticloadbalancingv2.NetworkLoadBalancer;
+import software.amazon.awscdk.services.elasticloadbalancingv2.NetworkTargetGroup;
+import software.amazon.awscdk.services.elasticloadbalancingv2.Protocol;
 import software.amazon.awscdk.services.iam.ManagedPolicy;
 import software.amazon.awscdk.services.iam.Role;
 import software.amazon.awscdk.services.iam.ServicePrincipal;
@@ -141,7 +149,7 @@ public class ServerDeploymentStack extends Stack {
                 .applicationName(applicationName)
                 .build();
 
-        LoadBalancer lb  = null;
+        LoadBalancer lb = null;
         switch (lbType) {
             case NONE:
                 break;
@@ -167,7 +175,43 @@ public class ServerDeploymentStack extends Stack {
                 lb = LoadBalancer.application(albTg);
                 break;
             case NLB:
+                NetworkLoadBalancer nlb = NetworkLoadBalancer.Builder.create(this, "NLB")
+                        .vpc(vpc)
+                        .internetFacing(true)
+                        .loadBalancerName("CDKManagedNLB")
+                        .build();
+                NetworkListener nlbListener = nlb.addListener("nlb-listener", BaseNetworkListenerProps.builder()
+                        .port(80)
+                        .protocol(Protocol.TCP)
+                        .build());
+                NetworkTargetGroup nlbTg = nlbListener.addTargets("nlb-tg", AddNetworkTargetsProps.builder()
+                        .port(80)
+                        .protocol(Protocol.TCP)
+                        .deregistrationDelay(Duration.seconds(10))
+                        .healthCheck(HealthCheck.builder()
+                                .build())
+                        .targetGroupName("CDKManagedNlbTg")
+                        .targets(Collections.singletonList(asg))
+                        .build());
+                lb = LoadBalancer.network(nlbTg);
+                break;
             case CLB:
+                software.amazon.awscdk.services.elasticloadbalancing.LoadBalancer clb = software.amazon.awscdk.services.elasticloadbalancing.LoadBalancer.Builder.create(this, "CLB")
+                        .vpc(vpc)
+                        .healthCheck(software.amazon.awscdk.services.elasticloadbalancing.HealthCheck.builder()
+                                .port(80)
+                                .protocol(LoadBalancingProtocol.HTTP)
+                                .build())
+                        .internetFacing(true)
+                        .build();
+                clb.getConnections().allowFromAnyIpv4(Port.tcpRange(80, 80));
+                clb.addListener(LoadBalancerListener.builder()
+                        .externalPort(80)
+                        .externalProtocol(LoadBalancingProtocol.HTTP)
+                        .build());
+                clb.addTarget(asg);
+                lb = LoadBalancer.classic(clb);
+                break;
             default:
                 throw new RuntimeException("Not implemented");
 
