@@ -4,28 +4,28 @@
 * Set default aws region to us-east-1
 * Create an EC2 key pair named `us-east-1-ec2-keypair`, and put the `us-east-1-ec2-keypair.pem` ssh key pair in ~/.ssh locally
 
-### Setup infra
-(The bootstrap needs to run only once. No need to run again in the future.)
-```
-ACCOUNT_ID=`aws sts get-caller-identity --query Account --output text`
-cdk bootstrap "aws://$ACCOUNT_ID/us-east-1"
-```
-after bootstrap or local code change, then create/update infra by running:
-```
-cdk deploy
-```
-
 ### Setup environment variables
 ```
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 
-export AWS_REGION="us-east-1"
+export AWS_REGION="us-east-1"  # doesn't have to be us-east-1
 export AWS_DEFAULT_REGION=$AWS_REGION
 ```
 or if you would like to use a profile in your `~/.aws/config`
 ```
 source ./bin/export-profile.sh <cli profile name>
+```
+
+### Setup infra
+(The bootstrap needs to run only once. No need to run again in the future.)
+```
+ACCOUNT_ID=`aws sts get-caller-identity --query Account --output text`
+cdk bootstrap "aws://$ACCOUNT_ID/$AWS_REGION"
+```
+after bootstrap or local code change, then create/update infra by running:
+```
+cdk deploy
 ```
 
 ### Create Deployment
