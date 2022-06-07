@@ -1,9 +1,11 @@
 package com.kaiwens.CodeDeployPlayground;
 
 import software.amazon.awscdk.core.Construct;
+import software.amazon.awscdk.core.Duration;
 import software.amazon.awscdk.core.Stack;
 import software.amazon.awscdk.core.StackProps;
 import software.amazon.awscdk.services.autoscaling.AutoScalingGroup;
+import software.amazon.awscdk.services.codedeploy.LoadBalancer;
 import software.amazon.awscdk.services.codedeploy.ServerApplication;
 import software.amazon.awscdk.services.codedeploy.ServerDeploymentGroup;
 import software.amazon.awscdk.services.ec2.AmazonLinuxGeneration;
@@ -19,6 +21,13 @@ import software.amazon.awscdk.services.ec2.SecurityGroup;
 import software.amazon.awscdk.services.ec2.UserData;
 import software.amazon.awscdk.services.ec2.Vpc;
 import software.amazon.awscdk.services.ec2.VpcLookupOptions;
+import software.amazon.awscdk.services.elasticloadbalancingv2.AddApplicationTargetsProps;
+import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationListener;
+import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationLoadBalancer;
+import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationProtocol;
+import software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationTargetGroup;
+import software.amazon.awscdk.services.elasticloadbalancingv2.BaseApplicationListenerProps;
+import software.amazon.awscdk.services.elasticloadbalancingv2.HealthCheck;
 import software.amazon.awscdk.services.iam.ManagedPolicy;
 import software.amazon.awscdk.services.iam.Role;
 import software.amazon.awscdk.services.iam.ServicePrincipal;
@@ -27,7 +36,6 @@ import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.CreateKeyPairRequest;
 import software.amazon.awssdk.services.ec2.model.CreateKeyPairResponse;
 import software.amazon.awssdk.services.ec2.model.DescribeKeyPairsRequest;
-import software.amazon.awssdk.services.ec2.model.DescribeKeyPairsResponse;
 import software.amazon.awssdk.services.ec2.model.Ec2Exception;
 
 import java.io.File;
@@ -38,14 +46,21 @@ import java.util.Collections;
 
 public class ServerDeploymentStack extends Stack {
 
+    public enum LBType {
+        NONE,
+        ALB,
+        NLB,
+        CLB
+    }
+
     private final static InstanceType instanceType = InstanceType.of(InstanceClass.BURSTABLE3, InstanceSize.NANO);
     private final static String ASG_NAME = "CdkManagedCodeDeployPlaygroundFleet";
 
     public ServerDeploymentStack(final Construct scope, final String id) {
-        this(scope, id, null);
+        this(scope, id, null, null);
     }
 
-    public ServerDeploymentStack(final Construct scope, final String id, final StackProps props) {
+    public ServerDeploymentStack(final Construct scope, final String id, final StackProps props, LBType lbType) {
         super(scope, id, props);
         String region = props.getEnv().getRegion();
         String account = props.getEnv().getAccount();
@@ -125,11 +140,44 @@ public class ServerDeploymentStack extends Stack {
                 .create(this, applicationName)
                 .applicationName(applicationName)
                 .build();
+
+        LoadBalancer lb  = null;
+        switch (lbType) {
+            case NONE:
+                break;
+            case ALB:
+                ApplicationLoadBalancer alb = ApplicationLoadBalancer.Builder.create(this, "ALB")
+                        .vpc(vpc)
+                        .loadBalancerName("CDKManagedALB")
+                        .securityGroup(securityGroup)
+                        .internetFacing(true)
+                        .build();
+                ApplicationListener albListener = alb.addListener("alb-listener", BaseApplicationListenerProps.builder()
+                        .protocol(ApplicationProtocol.HTTP)
+                        .build());
+                ApplicationTargetGroup albTg = albListener.addTargets("alb-tg", AddApplicationTargetsProps.builder()
+                        .protocol(ApplicationProtocol.HTTP)
+                        .healthCheck(HealthCheck.builder()
+                                .healthyHttpCodes("200")
+                                .build())
+                        .targetGroupName("CDKManagedAlbTg")
+                        .targets(Collections.singletonList(asg))
+                        .deregistrationDelay(Duration.seconds(10))
+                        .build());
+                lb = LoadBalancer.application(albTg);
+                break;
+            case NLB:
+            case CLB:
+            default:
+                throw new RuntimeException("Not implemented");
+
+        }
         ServerDeploymentGroup.Builder
                 .create(this, deploymentGroupName)
                 .deploymentGroupName(deploymentGroupName)
                 .application(application)
                 .autoScalingGroups(Collections.singletonList(asg))
+                .loadBalancer(lb)
                 .build();
         String bucketName = String.format("codedeploy-playground.revisions.%s.%s", account, region);
         Bucket.Builder.create(this, "RevisionBucket")

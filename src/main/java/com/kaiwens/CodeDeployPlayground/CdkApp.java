@@ -28,7 +28,7 @@ public class CdkApp {
                         .build());
 
 
-       new ServerDeploymentStack(app, "ServerDeploymentStack", stackPropsBuilder.stackName("ServerDeploymentStack").build());
+       new ServerDeploymentStack(app, "ServerDeploymentStack", stackPropsBuilder.stackName("ServerDeploymentStack").build(), ServerDeploymentStack.LBType.ALB);
 
 //
 //        // new EcsServiceStack(app, "CdkEcsServiceStack", stackPropsBuilder.stackName("CdkEcsServiceStack").build());

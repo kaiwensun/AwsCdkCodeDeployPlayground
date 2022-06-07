@@ -10,7 +10,7 @@
 ACCOUNT_ID=`aws sts get-caller-identity --query Account --output text`
 cdk bootstrap "aws://$ACCOUNT_ID/us-east-1"
 ```
-after bootstrap or local code change, then create infra by running:
+after bootstrap or local code change, then create/update infra by running:
 ```
 cdk deploy
 ```
@@ -23,7 +23,7 @@ export AWS_SECRET_ACCESS_KEY=...
 export AWS_REGION="us-east-1"
 export AWS_DEFAULT_REGION=$AWS_REGION
 ```
-or
+or if you would like to use a profile in your `~/.aws/config`
 ```
 source ./bin/export-profile.sh <cli profile name>
 ```
@@ -45,4 +45,6 @@ run `./bin/ssh-ec2/sh` can quickly ssh into the EC2 instance.
 
 This terminates the EC2 in the ASG, and waits a new EC2 instance to be launched by ASG and deployed by CodeDeploy. 
 
-This requires a healthy last-successfully-deployed revision.
+~~This requires a healthy last-successfully-deployed revision.~~
+
+This temporarily detaches ASG hook from deployment group, so no deployment to new instance.
