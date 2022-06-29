@@ -7,6 +7,7 @@ import software.amazon.awscdk.core.StackProps;
 import software.amazon.awscdk.services.autoscaling.AutoScalingGroup;
 import software.amazon.awscdk.services.codedeploy.LoadBalancer;
 import software.amazon.awscdk.services.codedeploy.ServerApplication;
+import software.amazon.awscdk.services.codedeploy.ServerDeploymentConfig;
 import software.amazon.awscdk.services.codedeploy.ServerDeploymentGroup;
 import software.amazon.awscdk.services.ec2.AmazonLinuxGeneration;
 import software.amazon.awscdk.services.ec2.AmazonLinuxImageProps;
@@ -222,6 +223,7 @@ public class ServerDeploymentStack extends Stack {
                 .application(application)
                 .autoScalingGroups(Collections.singletonList(asg))
                 .loadBalancer(lb)
+                .deploymentConfig(ServerDeploymentConfig.ALL_AT_ONCE)
                 .build();
         String bucketName = String.format("codedeploy-playground.revisions.%s.%s", account, region);
         Bucket.Builder.create(this, "RevisionBucket")

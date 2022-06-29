@@ -10,7 +10,7 @@ if [ ! -z $profile ]; then
   export AWS_SECRET_ACCESS_KEY=`aws configure get aws_secret_access_key --profile $profile`
   export AWS_REGION=`aws configure get region --profile $profile`
   export AWS_DEFAULT_REGION=$AWS_REGION
-
+  export ACCOUNT_ID=`aws sts get-caller-identity --query Account --output text`
   echo $AWS_REGION
   aws sts get-caller-identity
 fi
