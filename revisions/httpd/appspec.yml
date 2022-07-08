@@ -13,3 +13,6 @@ hooks:
   ApplicationStart:
     - location: scripts/start_server.sh
       timeout: 60
+  BeforeAllowTraffic:
+    - location: scripts/time_gate.sh
+      timeout: 3600
