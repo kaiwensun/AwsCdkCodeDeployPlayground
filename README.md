@@ -24,10 +24,19 @@ cdk bootstrap "aws://$ACCOUNT_ID/$AWS_REGION"
 ```
 after bootstrap or local code change, then create/update infra by running:
 ```
-cdk deploy
+cdk deploy <stack name>
 ```
 
-### Create Deployment
+To find available stack names, check `CdkApp.java`, or run:
+```
+cdk list
+```
+
+### EC2 Server deployment
+
+Resources are created by `ServerDeploymentStack`
+
+#### Create Deployment
 ```
 ./bin/create-deployment.sh
 ```
@@ -36,7 +45,7 @@ It will output deployment id. Log into AWS console and ssh into EC2 instance to 
 
 run `./bin/ssh-ec2/sh` can quickly ssh into the EC2 instance.
 
-### Destroy the EC2 host and spin up a new one
+#### Destroy the EC2 host and spin up a new one
 
 ```
 ./bin/terminate-asg-hosts.sh
@@ -48,11 +57,11 @@ This terminates the EC2 in the ASG, and waits a new EC2 instance to be launched 
 
 This temporarily detaches ASG hook from deployment group, so no deployment to new instance.
 
-### Modify ELB type
+#### Modify ELB type
 
 Update the LBType passed into `ServerDeploymentStack`.
 
-### Open web page hosted by the deployment target
+#### Open web page hosted by the deployment target
 
 Using the DNS of the access point.
 
@@ -60,3 +69,11 @@ Using the DNS of the access point.
 ./bin/open-web [ALB|NLB|TG|CLB|EC2]
 ```
 The optional access point type defaults to `EC2`. 
+
+### ECS deployment
+
+Resources are created by `EcsFargateDeploymentStack`
+
+#### Create Deployment
+
+TODO

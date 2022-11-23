@@ -29,13 +29,18 @@ public class CdkApp {
                 "ServerDeploymentStack",
                 stackPropsBuilder
                         .stackName("ServerDeploymentStack")
-                        .description("Created by CDK package KaiwensCodeDeployPlayground")
+                        .description("Managed by CDK package KaiwensCodeDeployPlayground")
                         .build(),
                 ServerDeploymentStack.LBType.CLB);
 
-//
-//        // new EcsServiceStack(app, "CdkEcsServiceStack", stackPropsBuilder.stackName("CdkEcsServiceStack").build());
-//
+
+         new EcsFargateDeploymentStack(app,
+                 "EcsDeploymentStack",
+                 stackPropsBuilder
+                         .stackName("EcsFargateDeploymentStack")
+                         .description("Managed by CDK package KaiwensCodeDeployPlayground")
+                         .build());
+
         app.synth();
     }
 }
