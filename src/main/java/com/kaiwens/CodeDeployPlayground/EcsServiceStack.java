@@ -1,8 +1,8 @@
 package com.kaiwens.CodeDeployPlayground;
 
-import software.amazon.awscdk.core.Construct;
-import software.amazon.awscdk.core.Stack;
-import software.amazon.awscdk.core.StackProps;
+import software.constructs.Construct;
+import software.amazon.awscdk.Stack;
+import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.codedeploy.EcsApplication;
 import software.amazon.awscdk.services.codedeploy.IEcsApplication;
 import software.amazon.awscdk.services.ec2.IVpc;

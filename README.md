@@ -1,8 +1,7 @@
 ### Prerequisites
 * Python3, Java, Maven
-* cdk (`npm install -g aws-cdk`)
-* Set default aws region to us-east-1
-* Create an EC2 key pair named `us-east-1-ec2-keypair`, and put the `us-east-1-ec2-keypair.pem` ssh key pair in ~/.ssh locally
+* cdk v2 (`npm install -g aws-cdk`)
+* Create an EC2 key pair named `us-east-1-ec2-keypair`, and put the `us-east-1-ec2-keypair.pem` ssh key pair in ~/.ssh locally (or use whatever region you are going to use)
 
 ### Setup environment variables
 ```

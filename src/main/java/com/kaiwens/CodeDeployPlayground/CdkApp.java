@@ -1,14 +1,11 @@
 package com.kaiwens.CodeDeployPlayground;
 
-import software.amazon.awscdk.core.App;
-import software.amazon.awscdk.core.Environment;
-import software.amazon.awscdk.core.StackProps;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awscdk.App;
+import software.amazon.awscdk.Environment;
+import software.amazon.awscdk.StackProps;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
 import software.amazon.awssdk.services.sts.StsClient;
-
-import java.util.Arrays;
 
 
 public class CdkApp {
@@ -28,7 +25,13 @@ public class CdkApp {
                         .build());
 
 
-       new ServerDeploymentStack(app, "ServerDeploymentStack", stackPropsBuilder.stackName("ServerDeploymentStack").build(), ServerDeploymentStack.LBType.CLB);
+        new ServerDeploymentStack(app,
+                "ServerDeploymentStack",
+                stackPropsBuilder
+                        .stackName("ServerDeploymentStack")
+                        .description("Created by CDK package KaiwensCodeDeployPlayground")
+                        .build(),
+                ServerDeploymentStack.LBType.CLB);
 
 //
 //        // new EcsServiceStack(app, "CdkEcsServiceStack", stackPropsBuilder.stackName("CdkEcsServiceStack").build());
