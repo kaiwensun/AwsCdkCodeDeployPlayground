@@ -76,4 +76,10 @@ Resources are created by `EcsFargateDeploymentStack`
 
 #### Create Deployment
 
-TODO
+```
+./bin/create-ecs-deployment.sh
+```
+
+Assuming all related resources (CFN, ECS, ELB, CodeDeploy) are in a good state, this script automatically detects the original and replacement target group and task definition, generates AppSpecContent, and create deploy the deployment.
+
+You can use the DNS printed by this script (from CFN stack output) to see a new web page is deployed.

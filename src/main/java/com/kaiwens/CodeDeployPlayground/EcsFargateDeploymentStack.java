@@ -51,28 +51,8 @@ public class EcsFargateDeploymentStack extends Stack {
 
         Cluster cluster = Cluster.Builder.create(this, "CdkManagedEcsCluster")
                 .clusterName("CdkManagedEcsCluster")
+                .enableFargateCapacityProviders(true)
                 .vpc(vpc).build();
-
-//        ApplicationLoadBalancedFargateService fargate = ApplicationLoadBalancedFargateService.Builder
-//                .create(this, "CdkManagedFargateService")
-//                .serviceName("CdkManagedFargateService")
-//                .loadBalancerName("CdkManagedFargateServiceLB")
-//                .cluster(cluster)           // Required
-//                .cpu(512)                   // Default is 256
-//                .desiredCount(3)            // Default is 1
-//                .taskImageOptions(
-//                        ApplicationLoadBalancedTaskImageOptions.builder()
-//                                .image(ContainerImage.fromRegistry("amazon/amazon-ecs-sample"))
-//                                .build())
-//                .memoryLimitMiB(2048)       // Default is 512
-//                .publicLoadBalancer(true)   // Default is false
-//                .build();
-
-//        Cluster cluster;
-//        TaskDefinition taskDefinition;
-//        Vpc vpc;
-//        FargateService service = FargateService.Builder.create(this, "Service").cluster(cluster).taskDefinition(taskDefinition).build();
-
 
         IApplicationTargetGroup tg1 = ApplicationTargetGroup.Builder.create(this, "CdkManagedEcsDeploymentTG1")
                 .targetGroupName("CdkManagedEcsDeploymentTG1")
@@ -95,7 +75,7 @@ public class EcsFargateDeploymentStack extends Stack {
                         .type(DeploymentControllerType.CODE_DEPLOY)
                         .build())
                 .cluster(cluster)
-                .taskDefinition(taskDefinitions.get(0))
+                .taskDefinition(taskDefinitions.get(1))
                 .build();
 
         ApplicationLoadBalancer alb = ApplicationLoadBalancer.Builder.create(this, "CdkManagedEcsDeploymentALB")
@@ -149,9 +129,6 @@ public class EcsFargateDeploymentStack extends Stack {
                     .value(taskDefinition.getTaskDefinitionArn())
                     .build());
         }
-
-
-
     }
 
     private TaskDefinition createTaskDefinition(String index, String registryName) {
