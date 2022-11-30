@@ -20,6 +20,10 @@ import software.amazon.awscdk.services.elasticloadbalancingv2.BaseApplicationLis
 import software.amazon.awscdk.services.elasticloadbalancingv2.IApplicationTargetGroup;
 import software.amazon.awscdk.services.elasticloadbalancingv2.ListenerAction;
 import software.amazon.awscdk.services.elasticloadbalancingv2.TargetType;
+import software.amazon.awscdk.services.iam.CompositePrincipal;
+import software.amazon.awscdk.services.iam.ManagedPolicy;
+import software.amazon.awscdk.services.iam.Role;
+import software.amazon.awscdk.services.iam.ServicePrincipal;
 import software.constructs.Construct;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
@@ -90,12 +94,25 @@ public class EcsFargateDeploymentStack extends Stack {
 
         fargateService.attachToApplicationTargetGroup(tg1);
 
+        final String roleName = "CdkManagedCodeDeployEcsDeploymentServiceRole-" + props.getEnv().getRegion();
+        final List<String> SPs = Arrays.asList(
+                "codedeploy.amazonaws.com"
+        );
+        Role codedeployServiceRole = Role.Builder.create(this, roleName)
+                .roleName(roleName)
+                .managedPolicies(Collections.singletonList(ManagedPolicy.fromAwsManagedPolicyName("AWSCodeDeployRoleForECS")))
+                .assumedBy(new CompositePrincipal(
+                        SPs.stream().map(ServicePrincipal::new).toArray(ServicePrincipal[]::new)
+                ))
+                .build();
+
         IEcsApplication codedeployApplication = EcsApplication.Builder.create(this, "CdkManagedEcsApplication")
                 .applicationName("CdkManagedEcsApplication")
                 .build();
         IEcsDeploymentGroup deploymentGroup = EcsDeploymentGroup.Builder.create(this, "CdkManagedEcsDeploymentGroup")
                 .deploymentGroupName("CdkManagedEcsDeploymentGroup")
                 .application(codedeployApplication)
+                .role(codedeployServiceRole)
                 .service(fargateService)
                 .blueGreenDeploymentConfig(EcsBlueGreenDeploymentConfig.builder()
                         .blueTargetGroup(tg1)

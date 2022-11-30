@@ -1,5 +1,6 @@
 package com.kaiwens.CodeDeployPlayground;
 
+import software.amazon.awscdk.services.iam.CompositePrincipal;
 import software.constructs.Construct;
 import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.Stack;
@@ -50,7 +51,9 @@ import software.amazon.awssdk.services.ec2.model.Ec2Exception;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 
 public class ServerDeploymentStack extends Stack {
@@ -217,9 +220,22 @@ public class ServerDeploymentStack extends Stack {
                 throw new RuntimeException("Not implemented");
 
         }
+
+        final String roleName = "CdkManagedCodeDeployEcsDeploymentServiceRole-" + props.getEnv().getRegion();
+        final List<String> SPs = Arrays.asList(
+                "codedeploy.amazonaws.com"
+        );
+        Role codedeployServiceRole = Role.Builder.create(this, roleName)
+                .roleName(roleName)
+                .managedPolicies(Collections.singletonList(ManagedPolicy.fromAwsManagedPolicyName("AWSCodeDeployRoleForECS")))
+                .assumedBy(new CompositePrincipal(
+                        SPs.stream().map(ServicePrincipal::new).toArray(ServicePrincipal[]::new)
+                ))
+                .build();
         ServerDeploymentGroup.Builder
                 .create(this, deploymentGroupName)
                 .deploymentGroupName(deploymentGroupName)
+                .role(codedeployServiceRole)
                 .application(application)
                 .autoScalingGroups(Collections.singletonList(asg))
                 .loadBalancer(lb)
