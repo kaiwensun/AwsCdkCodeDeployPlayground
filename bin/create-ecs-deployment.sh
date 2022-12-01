@@ -101,6 +101,11 @@ appspec=$(jq '.' <<< '
                 }
             }
         }
+    ],
+    "Hooks": [
+        {
+            "BeforeInstall": "CDKManagedEcsDeploymentStackLifecycleHook"
+        }
     ]
 }
 ')

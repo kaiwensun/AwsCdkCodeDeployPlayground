@@ -24,6 +24,10 @@ import software.amazon.awscdk.services.iam.CompositePrincipal;
 import software.amazon.awscdk.services.iam.ManagedPolicy;
 import software.amazon.awscdk.services.iam.Role;
 import software.amazon.awscdk.services.iam.ServicePrincipal;
+import software.amazon.awscdk.services.lambda.Code;
+import software.amazon.awscdk.services.lambda.Function;
+import software.amazon.awscdk.services.lambda.IFunction;
+import software.amazon.awscdk.services.lambda.Runtime;
 import software.constructs.Construct;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
@@ -45,6 +49,9 @@ public class EcsFargateDeploymentStack extends Stack {
 
     public EcsFargateDeploymentStack(final Construct scope, final String id, final StackProps props) {
         super(scope, id, props);
+
+        createLambdaLifecycleHookFunction("succeeded.lambda_handler");
+
         IVpc vpc = Vpc.Builder.create(this, "CdkManagedEcsVpc")
                 .maxAzs(3)  // Default is all AZs in region
                 .build();
@@ -165,5 +172,16 @@ public class EcsFargateDeploymentStack extends Stack {
                 .hostPort(80)
                 .build());
         return fargateTaskDefinition;
+    }
+
+    private IFunction createLambdaLifecycleHookFunction(String handler) {
+        IFunction function = Function.Builder.create(this, "LambdaLifecycleHookFunction")
+                .functionName("CDKManagedEcsDeploymentStackLifecycleHook")
+                .code(Code.fromAsset("./revisions/lifecyclehooks"))
+                .handler(handler)
+                .runtime(Runtime.PYTHON_3_9)
+                .build();
+        function.getRole().addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName("AWSCodeDeployFullAccess"));
+        return function;
     }
 }
