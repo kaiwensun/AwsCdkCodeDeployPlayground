@@ -221,13 +221,13 @@ public class ServerDeploymentStack extends Stack {
 
         }
 
-        final String roleName = "CdkManagedCodeDeployEcsDeploymentServiceRole-" + props.getEnv().getRegion();
+        final String roleName = "CdkManagedCodeDeployServerDeploymentServiceRole-" + props.getEnv().getRegion();
         final List<String> SPs = Arrays.asList(
                 "codedeploy.amazonaws.com"
         );
         Role codedeployServiceRole = Role.Builder.create(this, roleName)
                 .roleName(roleName)
-                .managedPolicies(Collections.singletonList(ManagedPolicy.fromAwsManagedPolicyName("AWSCodeDeployRoleForECS")))
+                .managedPolicies(Collections.singletonList(ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSCodeDeployRole")))
                 .assumedBy(new CompositePrincipal(
                         SPs.stream().map(ServicePrincipal::new).toArray(ServicePrincipal[]::new)
                 ))
