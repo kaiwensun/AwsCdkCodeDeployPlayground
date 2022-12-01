@@ -2,6 +2,7 @@ package com.kaiwens.CodeDeployPlayground;
 
 import software.amazon.awscdk.CfnOutput;
 import software.amazon.awscdk.CfnOutputProps;
+import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.services.codedeploy.EcsBlueGreenDeploymentConfig;
 import software.amazon.awscdk.services.codedeploy.EcsDeploymentGroup;
 import software.amazon.awscdk.services.codedeploy.IEcsDeploymentGroup;
@@ -180,6 +181,7 @@ public class EcsFargateDeploymentStack extends Stack {
                 .code(Code.fromAsset("./revisions/lifecyclehooks"))
                 .handler(handler)
                 .runtime(Runtime.PYTHON_3_9)
+                .timeout(Duration.seconds(60))
                 .build();
         function.getRole().addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName("AWSCodeDeployFullAccess"));
         return function;
