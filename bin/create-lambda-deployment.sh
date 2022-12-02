@@ -126,8 +126,7 @@ revision='{
 }'
 
 echo "Current invoking result"
-output=`aws lambda invoke --function-name $FUNCTION_NAME --qualifier $FUNCTION_ALIAS /dev/stdout`
-echo "$output"
+aws lambda invoke --function-name $FUNCTION_NAME --qualifier $FUNCTION_ALIAS /dev/stdout | jq
 
 echo "Creating deployment"
 deployment_id=`aws deploy create-deployment \
@@ -137,4 +136,4 @@ deployment_id=`aws deploy create-deployment \
   --output text`
 echo "Deployment ID: $deployment_id"
 echo "Invocation Command:"
-echo "aws lambda invoke --function-name $FUNCTION_NAME --qualifier $FUNCTION_ALIAS /dev/stdout"
+echo "aws lambda invoke --function-name $FUNCTION_NAME --qualifier $FUNCTION_ALIAS /dev/stdout | jq"
