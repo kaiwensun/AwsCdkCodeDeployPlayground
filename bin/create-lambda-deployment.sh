@@ -74,9 +74,13 @@ if [[ $from_v != `jq -r '.Version' <<< $v1` ]] && [[ $from_v != `jq -r '.Version
   echo "Alias version is not one of `jq -r '.Version' <<< $v1` or `jq -r '.Version' <<< $v2`!"
   exit 1
 fi
-if [[ $from_v == `jq -r '.Version' <<< $v1` ]]; then
+ if [[ $from_v == `jq -r '.Version' <<< $v1` ]]; then
+  from_flavor=$flavor1
+  to_flavor=$flavor2
   to_v=`jq -r '.Version' <<< $v2`
 else
+  from_flavor=$flavor2
+  to_flavor=$flavor1
   to_v=`jq -r '.Version' <<< $v1`
 fi
 routing_config=`jq -r '.RoutingConfig' <<< $alias`
@@ -88,6 +92,7 @@ if [[ "$routing_config" != null ]]; then
 fi
 
 echo "version: $from_v -> $to_v"
+echo "flavor: $from_flavor -> $to_flavor"
 
 # generate AppSpecContent
 appspec=$(jq '.' <<< '
