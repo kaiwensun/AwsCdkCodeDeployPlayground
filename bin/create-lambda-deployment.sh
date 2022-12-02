@@ -37,7 +37,30 @@ if [[ "$v2" == null ]]; then
   code_sha256=`jq -r '.CodeSha256' <<< $v1`
   revision_id=`jq -r '.RevisionId' <<< $v1`
   aws lambda update-function-configuration --function-name $FUNCTION_NAME --description $flavor2 --handler "lambda-${flavor2}.lambda_handler"
+  lastUpdateStatus=`aws lambda get-function-configuration --function-name CDKManagedLambdaDeploymentTargetFunction --output text --query LastUpdateStatus`
+  while [[ "$lastUpdateStatus" == "InProgress" ]]; do
+    sleep 5
+    lastUpdateStatus=`aws lambda get-function-configuration --function-name CDKManagedLambdaDeploymentTargetFunction --output text --query LastUpdateStatus`
+    echo function lastUpdateStatus $lastUpdateStatus
+  done
+  if [[ "$lastUpdateStatus" != Successful ]]; then
+    echo "Failed to update Lambda function: $lastUpdateStatus"
+    aws lambda get-function-configuration --function-name CDKManagedLambdaDeploymentTargetFunction --output json
+    exit 1
+  fi
   v2=`aws lambda publish-version --function-name $FUNCTION_NAME --code-sha256 $code_sha256`
+  qualifier=`jq -r '.Version' <<< "$v2"`
+  lastUpdateStatus=`aws lambda get-function-configuration --function-name CDKManagedLambdaDeploymentTargetFunction --qualifier $qualifier --output text --query LastUpdateStatus`
+  while [[ "$lastUpdateStatus" == InProgress ]]; do
+    sleep 5
+    lastUpdateStatus=`aws lambda get-function-configuration --function-name CDKManagedLambdaDeploymentTargetFunction --qualifier $qualifier --output text --query LastUpdateStatus`
+    echo alias $qualifier lastUpdateStatus $lastUpdateStatus
+  done
+  if [[ "$lastUpdateStatus" != Successful ]]; then
+    echo "Failed to publish Lambda function version $qualifier: $lastUpdateStatus"
+    aws lambda get-function-configuration --function-name CDKManagedLambdaDeploymentTargetFunction  --qualifier $qualifier --output json
+    exit 1
+  fi
 
   if [[ `jq -r '.Version' <<< "$v1"` == `jq -r '.Version' <<< "$v2"` ]]; then
     echo "Failed to publish new Lambda version"

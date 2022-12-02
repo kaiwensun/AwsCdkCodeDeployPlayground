@@ -7,11 +7,13 @@ import software.amazon.awscdk.Fn;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.codedeploy.ILambdaApplication;
-import software.amazon.awscdk.services.codedeploy.ILambdaDeploymentConfig;
 import software.amazon.awscdk.services.codedeploy.LambdaApplication;
 import software.amazon.awscdk.services.codedeploy.LambdaDeploymentConfig;
 import software.amazon.awscdk.services.codedeploy.LambdaDeploymentGroup;
-import software.amazon.awscdk.services.codedeploy.TrafficRouting;
+import software.amazon.awscdk.services.iam.CompositePrincipal;
+import software.amazon.awscdk.services.iam.ManagedPolicy;
+import software.amazon.awscdk.services.iam.Role;
+import software.amazon.awscdk.services.iam.ServicePrincipal;
 import software.amazon.awscdk.services.lambda.Alias;
 import software.amazon.awscdk.services.lambda.Code;
 import software.amazon.awscdk.services.lambda.Function;
@@ -21,7 +23,9 @@ import software.amazon.awscdk.services.s3.deployment.BucketDeployment;
 import software.amazon.awscdk.services.s3.deployment.Source;
 import software.constructs.Construct;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 
 public class LambdaDeploymentStack extends Stack {
@@ -59,9 +63,17 @@ public class LambdaDeploymentStack extends Stack {
                 .aliasName("live")
                 .version(function.getCurrentVersion())
                 .build();
-        ILambdaDeploymentConfig deploymentConfig = LambdaDeploymentConfig.Builder.create(this, "DeploymentConfig")
-                .deploymentConfigName("CdkManagedLambdaDeploymentConfig")
-                .trafficRouting(TrafficRouting.allAtOnce())
+
+        final String roleName = "CdkManagedCodeDeployLambdaDeploymentServiceRole-" + props.getEnv().getRegion();
+        final List<String> SPs = Arrays.asList(
+                "codedeploy.amazonaws.com"
+        );
+        Role codedeployServiceRole = Role.Builder.create(this, roleName)
+                .roleName(roleName)
+                .managedPolicies(Collections.singletonList(ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSCodeDeployRoleForLambda")))
+                .assumedBy(new CompositePrincipal(
+                        SPs.stream().map(ServicePrincipal::new).toArray(ServicePrincipal[]::new)
+                ))
                 .build();
 
         ILambdaApplication application = LambdaApplication.Builder.create(this, "Application")
@@ -71,8 +83,9 @@ public class LambdaDeploymentStack extends Stack {
         LambdaDeploymentGroup deploymentGroup = LambdaDeploymentGroup.Builder.create(this, "DeploymentGroup")
                 .application(application)
                 .deploymentGroupName("CdkManagedLambdaDeploymentGroup")
+                .role(codedeployServiceRole)
                 .alias(alias)
-                .deploymentConfig(deploymentConfig)
+                .deploymentConfig(LambdaDeploymentConfig.ALL_AT_ONCE)
                 .build();
         new CfnOutput(this, "CurrentVersion", CfnOutputProps.builder().value(function.getCurrentVersion().getVersion()).build());
         new CfnOutput(this, "FunctionAlias", CfnOutputProps.builder().value(alias.getAliasName()).build());
