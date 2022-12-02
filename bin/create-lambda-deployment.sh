@@ -66,6 +66,9 @@ if [[ "$v2" == null ]]; then
     echo "Failed to publish new Lambda version"
     exit 1
   fi
+else
+  flavor1=`jq -r '.Description' <<< $v1`
+  flavor2=`jq -r '.Description' <<< $v2`
 fi
 
 alias=`aws lambda get-alias --function-name $FUNCTION_NAME --name $FUNCTION_ALIAS`
