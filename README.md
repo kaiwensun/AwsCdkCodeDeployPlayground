@@ -83,3 +83,19 @@ Resources are created by `EcsFargateDeploymentStack`
 Assuming all related resources (CFN, ECS, ELB, CodeDeploy) are in a good state, this script automatically detects the original and replacement target group and task definition, generates AppSpecContent, and create deploy the deployment.
 
 You can use the DNS printed by this script (from CFN stack output) to see a new web page is deployed.
+
+### Lambda deployment
+
+Resources are created by `LambdaDeploymentStack`
+
+### Create Deployment
+
+```
+./bin/create-lambda-deployment.sh
+```
+
+This script automatically detects which Lambda function version is the current version of the alias, and creates a deployment to shift traffic to another version.
+
+CDK/CFN does not support publishing multiple versions for the same function in one single stack creation/update. So this script publishes a second version if there is only one.
+
+The code of the two lambda versions is in `revisions/lambda_app/` folder. To differentiate the two versions, the code prints different "flavors", A or B.
