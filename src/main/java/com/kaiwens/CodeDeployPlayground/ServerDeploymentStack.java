@@ -1,6 +1,7 @@
 package com.kaiwens.CodeDeployPlayground;
 
 import software.amazon.awscdk.services.iam.CompositePrincipal;
+import software.amazon.awssdk.utils.ImmutableMap;
 import software.constructs.Construct;
 import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.Stack;
@@ -53,7 +54,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class ServerDeploymentStack extends Stack {
@@ -229,7 +232,11 @@ public class ServerDeploymentStack extends Stack {
                 .roleName(roleName)
                 .managedPolicies(Collections.singletonList(ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSCodeDeployRole")))
                 .assumedBy(new CompositePrincipal(
-                        SPs.stream().map(ServicePrincipal::new).toArray(ServicePrincipal[]::new)
+//                        SPs.stream().map(ServicePrincipal::new).toArray(ServicePrincipal[]::new)
+                        SPs.stream().map(sp -> ServicePrincipal.Builder.create(sp).conditions(ImmutableMap.of(
+                                "StringEquals", ImmutableMap.of("aws:SourceAccount", account),
+                                "StringLike", ImmutableMap.of("aws:SourceArn", String.format("arn:aws:codedeploy:%s:%s:deploymentgroup:%s/%s", region, account, applicationName, deploymentGroupName))
+                        )).build()).toArray(ServicePrincipal[]::new)
                 ))
                 .build();
         ServerDeploymentGroup.Builder
