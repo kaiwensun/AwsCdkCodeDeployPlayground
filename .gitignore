@@ -6,6 +6,7 @@ target
 .settings
 .vscode
 *.iml
+cdk.context.json
 tmp/
 **/.DS_Store
 **/blob.txt
