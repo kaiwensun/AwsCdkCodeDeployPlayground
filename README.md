@@ -99,3 +99,9 @@ This script automatically detects which Lambda function version is the current v
 CDK/CFN does not support publishing multiple versions for the same function in one single stack creation/update. So this script publishes a second version if there is only one.
 
 The code of the two lambda versions is in `revisions/lambda_app/` folder. To differentiate the two versions, the code prints different "flavors", A or B.
+
+### Pipeline Stack
+
+Prerequisite: install git-remote-codecommit - https://github.com/aws/git-remote-codecommitcodecommit::us-west-2://CdkManagedRepository
+
+TODO

@@ -1,0 +1,31 @@
+version: 0.2
+
+env:
+  shell: bash
+  variables:
+    APPSPEC_FOLDER: codedeploy_appspec
+    APPSPEC_FILE_NAME: bundle.zip
+    BUILD_ACTION_INPUT_FOLDER: build_action_input
+    DEPLOY_ACTION_INPUT_FOLDER: deploy_action_input
+phases:
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - ./$BUILD_ACTION_INPUT_FOLDER/scripts/publish_lambda_function.sh
+      - ./$BUILD_ACTION_INPUT_FOLDER/scripts/create_deployment_group.sh
+  build:
+    on-failure: ABORT
+    commands:
+      - ./$BUILD_ACTION_INPUT_FOLDER/scripts/generate_codedeloy_appspec.sh
+artifacts:
+  files:
+  secondary-artifacts:
+    BO_DeployAction:
+      name: BO_DeployAction
+      files:
+        - '$DEPLOY_ACTION_INPUT_FOLDER/**/*'
+    BO_CDAppSpec:
+      name: BO_CDAppSpec
+      base-directory: $APPSPEC_FOLDER
+      files:
+        - $APPSPEC_FILE_NAME

@@ -48,6 +48,13 @@ public class CdkApp {
                         .description("Managed by CDK package KaiwensCodeDeployPlayground")
                         .build());
 
+        new CodePipelineLambdaStack(app,
+                "CodePipelineLambdaStack",
+                stackPropsBuilder
+                        .stackName("CodePipelineLambdaStack")
+                        .description("Managed by CDK package KaiwensCodeDeployPlayground")
+                        .build());
+
         app.synth();
     }
 }

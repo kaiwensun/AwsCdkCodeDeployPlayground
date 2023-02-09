@@ -1,0 +1,29 @@
+version: 0.2
+
+env:
+  shell: bash
+phases:
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - ./scripts/publish_lambda_function.sh
+      - ./scripts/create_deployment_group.sh
+  build:
+    on-failure: ABORT
+    commands:
+      - cp ./deploy_buildspec.yml ./deploy_action_input/buildspec.yml
+      - ./scripts/generate_codedeloy_appspec.sh
+artifacts:
+  files:
+    - deploy_action_input/buildspec.yml
+  name: codedeploy-appspec-$(date +%Y-%m-%d)
+  s3-prefix: codebuild-artifacts
+  secondary-artifacts:
+    codedeploy-artifact:
+      identifier: codedeploy
+      name: codedeploy
+      base-directory: codedeploy
+      files:
+        - bundle.zip
+
+
