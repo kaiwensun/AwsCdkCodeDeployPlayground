@@ -62,12 +62,3 @@ echo "$appspec"
 mkdir -p "$APPSPEC_FOLDER"
 echo "$appspec" > appspec.json
 zip -r "$APPSPEC_FOLDER/$APPSPEC_FILE_NAME" "appspec.json"
-
-echo hayhay "$APPSPEC_FOLDER/$APPSPEC_FILE_NAME"
-ls .
-echo "huhuhu"
-ls $APPSPEC_FOLDER
-echo "hayhay"
-ls $DEPLOY_ACTION_INPUT_FOLDER
-echo "hayhayyyyyy"
-echo $CODEBUILD_SRC_DIR
