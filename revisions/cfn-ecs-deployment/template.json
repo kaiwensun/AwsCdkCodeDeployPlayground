@@ -1,0 +1,480 @@
+{
+  "Parameters": {
+    "vpc": {
+      "Type": "AWS::EC2::VPC::Id"
+    },
+    "subnet1": {
+      "Type": "AWS::EC2::Subnet::Id"
+    },
+    "subnet2": {
+      "Type": "AWS::EC2::Subnet::Id"
+    },
+    "vpcCidrIp": {
+      "Type": "String",
+      "Default": "0.0.0.0/0"
+    },
+    "dockerImage": {
+      "Description": "Used to make a template change to update stack and trigger a new deployment",
+      "Type": "String",
+      "Default": "amazon/amazon-ecs-sample",
+      "AllowedValues": [
+        "amazon/amazon-ecs-sample",
+        "nginxdemos/hello:latest"
+      ]
+    },
+    "LaunchType": {
+      "Type": "String",
+      "AllowedValues": [
+        "FARGATE",
+        "EC2"
+      ],
+      "Default": "FARGATE"
+    },
+    "CodeDeployServiceRoleName": {
+      "Type": "String",
+      "Description": "Role used by CodeDeploy to invoke Lambda hooks"
+    },
+    "BeforeInstallHookFunction": {
+      "Description": "Lambda function name for the BeforeInstall LifeCycleEvent",
+      "Type": "String",
+      "Default": "CDKManagedEcsDeploymentStackLifecycleHook"
+    }
+  },
+  "Conditions": {
+    "UseLifecycleEventHook": {"Fn::Not": [{"Fn::Equals": ["", {"Ref": "BeforeInstallHookFunction"}]}]}
+  },
+  "Transform": [
+    "AWS::CodeDeployBlueGreen"
+  ],
+  "Hooks": {
+    "CodeDeployBlueGreenHook": {
+      "Properties": {
+        "TrafficRoutingConfig": {
+          "Type": "TimeBasedCanary",
+          "TimeBasedCanary": {
+            "StepPercentage": 10,
+            "BakeTimeMins": 1
+          }
+        },
+
+        "LifecycleEventHooks": {
+          "BeforeInstall": {
+            "Condition": "UseLifecycleEventHook",
+            "Ref": "BeforeInstallHookFunction"
+          }
+        },
+
+        "ServiceRole": {
+          "Ref": "CodeDeployServiceRoleName"
+        },
+        "Applications": [
+          {
+            "Target": {
+              "Type": "AWS::ECS::Service",
+              "LogicalID": "ECSDemoService"
+            },
+            "ECSAttributes": {
+              "TaskDefinitions": [
+                "BlueTaskDefinition",
+                "GreenTaskDefinition"
+              ],
+              "TaskSets": [
+                "BlueTaskSet",
+                "GreenTaskSet"
+              ],
+              "TrafficRouting": {
+                "ProdTrafficRoute": {
+                  "Type": "AWS::ElasticLoadBalancingV2::Listener",
+                  "LogicalID": "ALBListenerProdTraffic"
+                },
+                "TestTrafficRoute": {
+                  "Type": "AWS::ElasticLoadBalancingV2::Listener",
+                  "LogicalID": "ALBListenerTestTraffic"
+                },
+                "TargetGroups": [
+                  "ALBTargetGroupBlue",
+                  "ALBTargetGroupGreen"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "Type": "AWS::CodeDeploy::BlueGreen"
+    }
+  },
+  "Resources": {
+    "CFNTestSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for ec2 access",
+        "VpcId": {
+          "Ref": "vpc"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": { "Ref": "vpcCidrIp" }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "8080",
+            "ToPort": "8080",
+            "CidrIp": { "Ref": "vpcCidrIp" }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "9002",
+            "ToPort": "9002",
+            "CidrIp": { "Ref": "vpcCidrIp" }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": { "Ref": "vpcCidrIp" }
+          }
+        ]
+      }
+    },
+    "ALBTargetGroupBlue": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "HealthCheckIntervalSeconds": 5,
+        "HealthCheckPath": "/",
+        "HealthCheckPort": "80",
+        "HealthCheckProtocol": "HTTP",
+        "HealthCheckTimeoutSeconds": 2,
+        "HealthyThresholdCount": 2,
+        "Matcher": {
+          "HttpCode": "200"
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+        "Tags": [
+          {
+            "Key": "Group",
+            "Value": "cfn-test"
+          }
+        ],
+        "TargetType": "ip",
+        "UnhealthyThresholdCount": 4,
+        "VpcId": {
+          "Ref": "vpc"
+        }
+      }
+    },
+    "ALBTargetGroupGreen": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "HealthCheckIntervalSeconds": 5,
+        "HealthCheckPath": "/",
+        "HealthCheckPort": "80",
+        "HealthCheckProtocol": "HTTP",
+        "HealthCheckTimeoutSeconds": 2,
+        "HealthyThresholdCount": 2,
+        "Matcher": {
+          "HttpCode": "200"
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+        "Tags": [
+          {
+            "Key": "Group",
+            "Value": "cfn-test"
+          }
+        ],
+        "TargetType": "ip",
+        "UnhealthyThresholdCount": 4,
+        "VpcId": {
+          "Ref": "vpc"
+        }
+      }
+    },
+    "TestALB": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          {
+            "Ref": "CFNTestSecurityGroup"
+          }
+        ],
+        "Subnets": [
+          {
+            "Ref": "subnet1"
+          },
+          {
+            "Ref": "subnet2"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Group",
+            "Value": "cfn-test"
+          }
+        ],
+        "Type": "application",
+        "IpAddressType": "ipv4"
+      }
+    },
+    "ALBListenerProdTraffic": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "DefaultActions": [
+          {
+            "Type": "forward",
+            "ForwardConfig": {
+              "TargetGroups": [
+                {
+                  "TargetGroupArn": {
+                    "Ref": "ALBTargetGroupBlue"
+                  },
+                  "Weight": 1
+                }
+              ]
+            }
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "TestALB"
+        },
+        "Port": 80,
+        "Protocol": "HTTP"
+      }
+    },
+    "ALBListenerProdRule": {
+      "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+      "Properties": {
+        "Actions": [
+          {
+            "Type": "forward",
+            "ForwardConfig": {
+              "TargetGroups": [
+                {
+                  "TargetGroupArn": {
+                    "Ref": "ALBTargetGroupBlue"
+                  },
+                  "Weight": 1
+                }
+              ]
+            }
+          }
+        ],
+        "Conditions": [
+          {
+            "Field": "http-header",
+            "HttpHeaderConfig": {
+              "HttpHeaderName": "User-Agent",
+              "Values": [
+                "Mozilla"
+              ]
+            }
+          }
+        ],
+        "ListenerArn": {
+          "Ref": "ALBListenerProdTraffic"
+        },
+        "Priority": 1
+      }
+    },
+    "ALBListenerTestTraffic": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "DefaultActions": [
+          {
+            "Type": "forward",
+            "ForwardConfig": {
+              "TargetGroups": [
+                {
+                  "TargetGroupArn": {
+                    "Ref": "ALBTargetGroupBlue"
+                  },
+                  "Weight": 1
+                }
+              ]
+            }
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "TestALB"
+        },
+        "Port": 9002,
+        "Protocol": "HTTP"
+      }
+    },
+    "ALBListenerTestRule": {
+      "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+      "Properties": {
+        "Actions": [
+          {
+            "Type": "forward",
+            "ForwardConfig": {
+              "TargetGroups": [
+                {
+                  "TargetGroupArn": {
+                    "Ref": "ALBTargetGroupBlue"
+                  },
+                  "Weight": 1
+                }
+              ]
+            }
+          }
+        ],
+        "Conditions": [
+          {
+            "Field": "http-header",
+            "HttpHeaderConfig": {
+              "HttpHeaderName": "User-Agent",
+              "Values": [
+                "Mozilla"
+              ]
+            }
+          }
+        ],
+        "ListenerArn": {
+          "Ref": "ALBListenerTestTraffic"
+        },
+        "Priority": 1
+      }
+    },
+    "ECSTaskExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+        ]
+      }
+    },
+    "BlueTaskDefinition": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "ExecutionRoleArn": {
+          "Ref": "ECSTaskExecutionRole"
+        },
+        "ContainerDefinitions": [
+          {
+            "Name": "DemoApp",
+            "Image": {
+              "Ref": "dockerImage"
+            },
+            "Essential": true,
+            "PortMappings": [
+              {
+                "HostPort": 80,
+                "Protocol": "tcp",
+                "ContainerPort": 80
+              }
+            ]
+          }
+        ],
+        "RequiresCompatibilities": [
+          {
+            "Ref": "LaunchType"
+          }
+        ],
+        "NetworkMode": "awsvpc",
+        "Cpu": "256",
+        "Memory": "512"
+      }
+    },
+    "ECSDemoCluster": {
+      "Type": "AWS::ECS::Cluster",
+      "Properties": {
+      }
+    },
+    "ECSDemoService": {
+      "Type": "AWS::ECS::Service",
+      "Properties": {
+        "Cluster": {
+          "Ref": "ECSDemoCluster"
+        },
+        "DesiredCount": 1,
+        "DeploymentController": {
+          "Type": "EXTERNAL"
+        }
+      }
+    },
+    "BlueTaskSet": {
+      "Type": "AWS::ECS::TaskSet",
+      "Properties": {
+        "Cluster": {
+          "Ref": "ECSDemoCluster"
+        },
+        "LaunchType": {
+          "Ref": "LaunchType"
+        },
+        "NetworkConfiguration": {
+          "AwsVpcConfiguration": {
+            "AssignPublicIp": "ENABLED",
+            "SecurityGroups": [
+              {
+                "Ref": "CFNTestSecurityGroup"
+              }
+            ],
+            "Subnets": [
+              {
+                "Ref": "subnet1"
+              },
+              {
+                "Ref": "subnet2"
+              }
+            ]
+          }
+        },
+        "PlatformVersion": "1.3.0",
+        "Scale": {
+          "Unit": "PERCENT",
+          "Value": 1.0
+        },
+        "Service": {
+          "Ref": "ECSDemoService"
+        },
+        "TaskDefinition": {
+          "Ref": "BlueTaskDefinition"
+        },
+        "LoadBalancers": [
+          {
+            "ContainerName": "DemoApp",
+            "ContainerPort": 80,
+            "TargetGroupArn": {
+              "Ref": "ALBTargetGroupBlue"
+            }
+          }
+        ]
+      }
+    },
+    "PrimaryTaskSet": {
+      "Type": "AWS::ECS::PrimaryTaskSet",
+      "Properties": {
+        "Cluster": {
+          "Ref": "ECSDemoCluster"
+        },
+        "Service": {
+          "Ref": "ECSDemoService"
+        },
+        "TaskSetId": {
+          "Fn::GetAtt": [
+            "BlueTaskSet",
+            "Id"
+          ]
+        }
+      }
+    }
+  }
+}

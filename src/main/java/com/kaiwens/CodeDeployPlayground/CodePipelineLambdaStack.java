@@ -37,18 +37,19 @@ import java.util.Map;
 
 public class CodePipelineLambdaStack extends Stack {
 
-    private static final String LAMBDA_FUNCTION_NAME = "CDK-managed-codebuild-function-2";
+    private static final String LAMBDA_FUNCTION_NAME = "CDK-managed-codebuild-function-3";
     private static final String LAMBDA_FUNCTION_ALIAS = "live";
     private static final String LAMBDA_HANDLER_1 = "lambda-A.lambda_handler";
     private static final String LAMBDA_HANDLER_2 = "lambda-B.lambda_handler";
     private static final String LAMBDA_FUNCTION_DESCRIPTION = "This function is crated by CDK-managed CodeBuild. If deleted, CodeBuild will recreate it in the next run.";
     private static final String CODEDEPLOY_APPLICATION_NAME = "CdkManagedCodePipelineLambdaApplication";
     private static final String CODEDEPLOY_DEPLOYMENTGROUP_NAME = "CdkManagedCodePipelineLambdaDeploymentGroup";
+    private final String className;
 
     public CodePipelineLambdaStack(final Construct scope, final String id, final StackProps props) {
         super(scope, id, props);
 
-        final String className = this.getClass().getSimpleName();
+        className = this.getClass().getSimpleName();
 
         Role lambdaExecutionRole = Role.Builder.create(this, "LambdaExecutionRole")
                 .inlinePolicies(Collections.singletonMap("lambda",
@@ -70,9 +71,13 @@ public class CodePipelineLambdaStack extends Stack {
                 .version(function.getLatestVersion())
                 .build();
 
-        Role codedeployServiceRole = createCodeDeployResources();
+        Bucket artifactBucket = Bucket.Builder.create(this, "CdkManagedArtifactBucket")
+                .bucketName(String.format("CdkManaged-%s-%s-%s", className, getAccount(), getRegion()).toLowerCase())
+                .build();
+
+        Role codedeployServiceRole = createCodeDeployResources(artifactBucket);
         Role buildProjectRole = Role.Builder.create(this, "BuildActionRole")
-                .roleName("CdkManagedBuildActionRole-" + className)
+                .roleName(String.format("CdkManagedBuildActionRole-%s-%s", className, getRegion()))
                 .assumedBy(ServicePrincipal.Builder.create("codebuild").build())
                 .managedPolicies(Arrays.asList(ManagedPolicy.fromAwsManagedPolicyName("AWSCodeDeployFullAccess")))
                 .inlinePolicies(
@@ -118,7 +123,6 @@ public class CodePipelineLambdaStack extends Stack {
                 .assumedBy(ServicePrincipal.Builder.create("codebuild").build())
                 .managedPolicies(Arrays.asList(ManagedPolicy.fromAwsManagedPolicyName("AWSCodeDeployDeployerAccess")))
                 .build();
-
 
         PipelineProject buildProject = PipelineProject.Builder.create(this, "BuildProject")
                 .projectName("BuildProject")
@@ -203,10 +207,7 @@ public class CodePipelineLambdaStack extends Stack {
                 .environmentVariables(buildEnvs)
                 .project(deployProject)
                 .input(buildOutputForDeployAction)
-                .build();
-
-        Bucket artifactBucket = Bucket.Builder.create(this, "CdkManagedArtifactBucket")
-                .bucketName(String.format("CdkManaged-%s-%s-%s", className, getAccount(), getRegion()).toLowerCase())
+                .extraInputs(Arrays.asList(buildOutputForCdedeployAppSpec))
                 .build();
 
         Pipeline pipeline = Pipeline.Builder.create(this, "codepipeline")
@@ -231,11 +232,11 @@ public class CodePipelineLambdaStack extends Stack {
                 .stageName("Build")
                 .actions(Collections.singletonList(buildAction))
                 .build());
-//
-//        pipeline.addStage(StageOptions.builder()
-//                .stageName("Deploy")
-//                .actions(Collections.singletonList(deployAction))
-//                .build());
+
+        pipeline.addStage(StageOptions.builder()
+                .stageName("Deploy")
+                .actions(Collections.singletonList(deployAction))
+                .build());
     }
 
     private IFunction createLambdaFunction(String functionName, String handler, IRole role) {
@@ -250,14 +251,25 @@ public class CodePipelineLambdaStack extends Stack {
         return function;
     }
 
-    private Role createCodeDeployResources() {
+    private Role createCodeDeployResources(Bucket artifactBucket) {
         ILambdaApplication application = LambdaApplication.Builder.create(this, "Application")
                 .applicationName(CODEDEPLOY_APPLICATION_NAME)
                 .build();
 
         Role serviceRole = Role.Builder.create(this, "CodeDeployServiceRole")
+                .roleName(String.format("CdkManagedCDServiceRole-%s-%s", className, getRegion()))
                 .managedPolicies(Arrays.asList(ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSCodeDeployRoleForLambda")))
-                .assumedBy(ServicePrincipal.Builder.create("codebuild").build())
+                .inlinePolicies(Collections.singletonMap("s3",
+                        PolicyDocument.Builder.create().statements(
+                                Arrays.asList(
+                                        PolicyStatement.Builder.create()
+                                                .actions(Arrays.asList("s3:GetObject", "s3:GetObjectVersion"))
+                                                .effect(Effect.ALLOW)
+                                                .resources(Arrays.asList(artifactBucket.getBucketArn() + "/*"))
+                                                .build()
+                                )).build()
+                ))
+                .assumedBy(ServicePrincipal.Builder.create("codedeploy").build())
                 .build();
         return serviceRole;
     }

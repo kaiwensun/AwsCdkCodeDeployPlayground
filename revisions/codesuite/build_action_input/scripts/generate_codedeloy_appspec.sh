@@ -60,5 +60,6 @@ appspec=$(jq '.' <<< '
 echo "$appspec"
 
 mkdir -p "$APPSPEC_FOLDER"
-echo "$appspec" > appspec.json
-zip -r "$APPSPEC_FOLDER/$APPSPEC_FILE_NAME" "appspec.json"
+echo "$appspec" > "$APPSPEC_FOLDER/$APPSPEC_FILE_NAME"
+# do not explicitly zip. CodeBuild will zip artifacts
+#zip -r "$APPSPEC_FOLDER/$APPSPEC_FILE_NAME" "appspec.json"

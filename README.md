@@ -104,4 +104,9 @@ The code of the two lambda versions is in `revisions/lambda_app/` folder. To dif
 
 Prerequisite: install git-remote-codecommit - https://github.com/aws/git-remote-codecommitcodecommit::us-west-2://CdkManagedRepository
 
+git clone codecommit::us-west-2://CdkManagedRepository
+mv CdkManagedRepository/.git .
+
+needs to push a commit to add execution permission to the file permission mode 
+
 TODO

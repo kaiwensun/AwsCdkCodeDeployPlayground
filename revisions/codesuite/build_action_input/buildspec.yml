@@ -4,7 +4,7 @@ env:
   shell: bash
   variables:
     APPSPEC_FOLDER: codedeploy_appspec
-    APPSPEC_FILE_NAME: bundle.zip
+    APPSPEC_FILE_NAME: appspec.yaml
     BUILD_ACTION_INPUT_FOLDER: build_action_input
     DEPLOY_ACTION_INPUT_FOLDER: deploy_action_input
 phases:
