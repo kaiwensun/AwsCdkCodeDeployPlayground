@@ -118,6 +118,8 @@ cdk deploy EcsFargateBGHookStack --parameters DockerImage='amazon/amazon-ecs-sam
 cdk deploy EcsFargateBGHookStack --parameters DockerImage='nginxdemos/hello:latest'
 ```
 
+You can use the DNS of the ALB to view the web server update. 
+
 ### Pipeline Stack
 
 (stack works, readme incomplete)
