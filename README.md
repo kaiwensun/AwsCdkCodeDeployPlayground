@@ -88,7 +88,7 @@ You can use the DNS printed by this script (from CFN stack output) to see a new 
 
 Resources are created by `LambdaDeploymentStack`
 
-### Create Deployment
+#### Create Deployment
 
 ```
 ./bin/create-lambda-deployment.sh
@@ -101,6 +101,10 @@ CDK/CFN does not support publishing multiple versions for the same function in o
 The code of the two lambda versions is in `revisions/lambda_app/` folder. To differentiate the two versions, the code prints different "flavors", A or B.
 
 ### CloudFormation ECS Blue/Green Deployment
+
+Resources are created by `EcsFargateBGHookStack`
+
+#### Create Deployment
 
 This CDK stack models the CFN-ECS B/G deployment mentioned by [the doc here](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/blue-green.html). Please read this doc completely to understand the limitations, and when a CodeDeploy deployment will be created.
 
@@ -115,6 +119,8 @@ cdk deploy EcsFargateBGHookStack --parameters DockerImage='nginxdemos/hello:late
 ```
 
 ### Pipeline Stack
+
+(stack works, readme incomplete)
 
 Prerequisite: install git-remote-codecommit - https://github.com/aws/git-remote-codecommitcodecommit::us-west-2://CdkManagedRepository
 
