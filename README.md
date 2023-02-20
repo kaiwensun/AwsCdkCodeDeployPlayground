@@ -100,6 +100,20 @@ CDK/CFN does not support publishing multiple versions for the same function in o
 
 The code of the two lambda versions is in `revisions/lambda_app/` folder. To differentiate the two versions, the code prints different "flavors", A or B.
 
+### CloudFormation ECS Blue/Green Deployment
+
+This CDK stack models the CFN-ECS B/G deployment mentioned by [the doc here](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/blue-green.html). Please read this doc completely to understand the limitations, and when a CodeDeploy deployment will be created.
+
+The stack takes a parameter `DockerImage`. The initial stack creation creates only the blue resources, so there is not any CodeDeploy deployment. Then you can change the image to trigger a B/G deployment.
+
+```
+cdk deploy EcsFargateBGHookStack --parameters DockerImage='amazon/amazon-ecs-sample'
+```
+
+```
+cdk deploy EcsFargateBGHookStack --parameters DockerImage='nginxdemos/hello:latest'
+```
+
 ### Pipeline Stack
 
 Prerequisite: install git-remote-codecommit - https://github.com/aws/git-remote-codecommitcodecommit::us-west-2://CdkManagedRepository

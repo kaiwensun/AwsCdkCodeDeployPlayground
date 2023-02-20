@@ -48,6 +48,13 @@ public class CdkApp {
                         .description("Managed by CDK package KaiwensCodeDeployPlayground")
                         .build());
 
+        new EcsFargateBGHookStack(app,
+                "EcsFargateBGHookStack",
+                stackPropsBuilder
+                        .stackName("EcsFargateBGHookStack")
+                        .description("Managed by CDK package KaiwensCodeDeployPlayground")
+                        .build());
+
         new CodePipelineLambdaStack(app,
                 "CodePipelineLambdaStack",
                 stackPropsBuilder
