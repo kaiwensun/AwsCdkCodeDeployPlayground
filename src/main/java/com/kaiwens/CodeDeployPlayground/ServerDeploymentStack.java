@@ -142,6 +142,7 @@ public class ServerDeploymentStack extends Stack {
                                 .generation(AmazonLinuxGeneration.AMAZON_LINUX)
                                 .build()
                 ))
+                .requireImdsv2(true)
                 .securityGroup(securityGroup)
                 .role(ec2InstanceProfileRole)
                 .userData(userData)
