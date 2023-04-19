@@ -1,5 +1,6 @@
 package com.kaiwens.CodeDeployPlayground;
 
+import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.services.iam.CompositePrincipal;
 import software.amazon.awssdk.utils.ImmutableMap;
 import software.constructs.Construct;
@@ -251,6 +252,7 @@ public class ServerDeploymentStack extends Stack {
         Bucket.Builder.create(this, "RevisionBucket")
                 .bucketName(bucketName)
                 .versioned(true)
+                .removalPolicy(RemovalPolicy.DESTROY)
                 .build();
     }
 

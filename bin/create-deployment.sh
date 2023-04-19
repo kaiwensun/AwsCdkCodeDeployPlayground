@@ -12,7 +12,8 @@ CD_DEPLOYMENTGROUP_NAME=CdkManagedServerDeploymentGroup
 
 set -e
 pushd $( dirname "${BASH_SOURCE[0]}" )/.. > /dev/null
-s3key=server/${SOFTWARE}/${SOFTWARE}
+timestamp=`date +%Y-%m-%dT%H-%M-%S`
+s3key=server/${SOFTWARE}/${SOFTWARE}-${timestamp}
 revisionS3Location="s3://${BUCKET_NAME}/${s3key}"
 mkdir -p tmp
 

@@ -1,12 +1,24 @@
+
 <h1>Hello World!</h1>
 
 <ul>
-    <li><a href="./hostname.html">Check my host name</a></li>
-    <li><a href="./datetime.html">Check my deployment time</a></li>
 </ul>
-<div>
-    <h2> Host name: </h2>
-    <iframe src="./hostname.html" title="host name"></iframe>
-    <h2> Deployment time: </h2>
-    <iframe src="./datetime.html" title="date time"></iframe>
-</div>
+
+<script type="text/javascript">
+    const pages = [
+        ["Instance ID", "./instance_id.html"],
+        ["Host Name", "./hostname.html"],
+        ["Deployment Time", "./datetime.html"],
+        ["Available Files", "./file_list.html"],
+    ]
+    const ul = document.querySelector("ul");
+    pages.forEach(page => {
+        const [title, path] = page;
+        const li = document.createElement("li");
+        li.innerHTML = `
+            <a href="${path}" style="display: block; background-color: #cccccc;">${title}</a>
+            <iframe src="${path}" title="${title}"></iframe>
+        `;
+        ul.appendChild(li);
+    });
+</script>
