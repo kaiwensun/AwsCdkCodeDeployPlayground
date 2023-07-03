@@ -1,5 +1,7 @@
 package com.kaiwens.CodeDeployPlayground;
 
+import software.amazon.awscdk.CfnOutput;
+import software.amazon.awscdk.CfnOutputProps;
 import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.services.iam.CompositePrincipal;
 import software.amazon.awssdk.utils.ImmutableMap;
@@ -254,6 +256,10 @@ public class ServerDeploymentStack extends Stack {
                 .versioned(true)
                 .removalPolicy(RemovalPolicy.DESTROY)
                 .build();
+
+        new CfnOutput(this, "ApplicationName", CfnOutputProps.builder().value(applicationName).build());
+        new CfnOutput(this, "DeploymentGroupName", CfnOutputProps.builder().value(deploymentGroupName).build());
+        new CfnOutput(this, "S3BucketName", CfnOutputProps.builder().value(bucketName).build());
     }
 
     private void createKeyPairIfAbsent(final String keyPairName) {

@@ -6,12 +6,19 @@ SOFTWARE=httpd
 REGION=${AWS_DEFAULT_REGION}
 ACCOUNT=`aws sts get-caller-identity --query Account --output text`
 
-BUCKET_NAME="codedeploy-playground.revisions.${ACCOUNT}.${REGION}"
-CD_APPLICATION_NAME=CdkManagedServerApplication
-CD_DEPLOYMENTGROUP_NAME=CdkManagedServerDeploymentGroup
+STACK_NAME=ServerDeploymentStack
 
-set -e
 pushd $( dirname "${BASH_SOURCE[0]}" )/.. > /dev/null
+
+source bin/utils.sh
+
+stack_outputs=`aws cloudformation describe-stacks --stack-name $STACK_NAME --output json --query Stacks[0].Outputs`
+echo $stack_outputs
+
+BUCKET_NAME=`get_stack_output S3BucketName`
+CD_APPLICATION_NAME=`get_stack_output ApplicationName`
+CD_DEPLOYMENTGROUP_NAME=`get_stack_output DeploymentGroupName`
+
 timestamp=`date +%Y-%m-%dT%H-%M-%S`
 s3key=server/${SOFTWARE}/${SOFTWARE}-${timestamp}
 revisionS3Location="s3://${BUCKET_NAME}/${s3key}"

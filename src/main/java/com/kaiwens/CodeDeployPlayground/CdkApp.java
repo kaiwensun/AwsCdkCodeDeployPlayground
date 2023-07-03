@@ -35,7 +35,7 @@ public class CdkApp {
 
 
          new EcsFargateDeploymentStack(app,
-                 "EcsDeploymentStack",
+                 "EcsFargateDeploymentStack",
                  stackPropsBuilder
                          .stackName("EcsFargateDeploymentStack")
                          .description("Managed by CDK package KaiwensCodeDeployPlayground")

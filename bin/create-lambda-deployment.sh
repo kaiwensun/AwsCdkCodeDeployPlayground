@@ -4,12 +4,11 @@ set -e
 
 STACK_NAME=LambdaDeploymentStack
 
-stack_outputs=`aws cloudformation describe-stacks --stack-name $STACK_NAME --output json --query Stacks[0].Outputs`
+pushd $( dirname "${BASH_SOURCE[0]}" )/.. > /dev/null
 
-function get_stack_output() {
-  key=$1
-  jq -r 'map(select(.OutputKey == "'"${key}"'")) | .[0].OutputValue' <<< $stack_outputs
-}
+source bin/utils.sh
+
+stack_outputs=`aws cloudformation describe-stacks --stack-name $STACK_NAME --output json --query Stacks[0].Outputs`
 
 CD_APPLICATION_NAME=`get_stack_output "ApplicationName"`
 CD_DEPLOYMENTGROUP_NAME=`get_stack_output "DeploymentGroupName"`

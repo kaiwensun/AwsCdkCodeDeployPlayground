@@ -154,6 +154,15 @@ public class EcsFargateDeploymentStack extends Stack {
                     .value(taskDefinition.getTaskDefinitionArn())
                     .build());
         }
+
+        new CfnOutput(this, "ApplicationName", CfnOutputProps.builder()
+                .value(codedeployApplication.getApplicationName())
+                .build());
+
+        new CfnOutput(this, "DeploymentGroupName", CfnOutputProps.builder()
+                .value(deploymentGroup.getDeploymentGroupName())
+                .build());
+
     }
 
     private TaskDefinition createTaskDefinition(String index, String registryName) {

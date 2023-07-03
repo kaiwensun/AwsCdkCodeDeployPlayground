@@ -2,16 +2,16 @@
 
 set -e
 
-CD_APPLICATION_NAME=CdkManagedEcsApplication
-CD_DEPLOYMENTGROUP_NAME=CdkManagedEcsDeploymentGroup
 STACK_NAME=EcsFargateDeploymentStack
+
+pushd $( dirname "${BASH_SOURCE[0]}" )/.. > /dev/null
+
+source bin/utils.sh
 
 stack_outputs=`aws cloudformation describe-stacks --stack-name $STACK_NAME --output json --query Stacks[0].Outputs`
 
-function get_stack_output() {
-  key=$1
-  jq -r 'map(select(.OutputKey == "'"${key}"'")) | .[0].OutputValue' <<< $stack_outputs
-}
+CD_APPLICATION_NAME=`get_stack_output ApplicationName`
+CD_DEPLOYMENTGROUP_NAME=`get_stack_output DeploymentGroupName`
 
 dg_info=`aws deploy get-deployment-group --application-name $CD_APPLICATION_NAME --deployment-group-name $CD_DEPLOYMENTGROUP_NAME --output json --query deploymentGroupInfo`
 dg_tg1=`jq -r '.loadBalancerInfo.targetGroupPairInfoList[0].targetGroups[0].name' <<< "$dg_info"`
