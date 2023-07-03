@@ -13,7 +13,6 @@ pushd $( dirname "${BASH_SOURCE[0]}" )/.. > /dev/null
 source bin/utils.sh
 
 stack_outputs=`aws cloudformation describe-stacks --stack-name $STACK_NAME --output json --query Stacks[0].Outputs`
-echo $stack_outputs
 
 BUCKET_NAME=`get_stack_output S3BucketName`
 CD_APPLICATION_NAME=`get_stack_output ApplicationName`
