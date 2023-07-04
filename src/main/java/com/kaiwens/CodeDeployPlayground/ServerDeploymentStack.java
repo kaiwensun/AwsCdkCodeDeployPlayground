@@ -142,7 +142,7 @@ public class ServerDeploymentStack extends Stack {
                 .instanceType(instanceType)
                 .machineImage(MachineImage.latestAmazonLinux(
                         AmazonLinuxImageProps.builder()
-                                .generation(AmazonLinuxGeneration.AMAZON_LINUX)
+                                .generation(AmazonLinuxGeneration.AMAZON_LINUX_2)
                                 .build()
                 ))
                 .requireImdsv2(true)
