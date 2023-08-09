@@ -2,9 +2,11 @@
 
 **THIS IS A PERSONAL REPOSITORY. THIS IS NOT ENDORSED BY AWS OR CODEDEPLOY.**
 
-This repository uses CDK to create basic resources required by AWS CodeDeploy EC2, Lambda, or ECS deployments, so you can
-quickly create a basic CodeDeploy deployment. I highly recommend you to review the CDK stacks and shell scripts to understand
-what they do before you use them.
+This repository uses CDK to create basic resources required by AWS CodeDeploy EC2, Lambda, or ECS deployments, so you
+can quickly create a basic CodeDeploy deployment and get some initial taste, and start from there.
+
+Many configurations and methodologies are not appropriate for production. I highly recommend you to review the CDK stacks
+and shell scripts to understand what they do before you use them.
 
 ### Prerequisites
 * Python3, Java, Maven
