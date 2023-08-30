@@ -194,7 +194,7 @@ public class EcsFargateBGHookStack extends Stack {
                 .lifecycleEventHooks(CfnCodeDeployBlueGreenLifecycleEventHooks.builder()
                         // Can't use hookLambdaFunction.getFunctionName(). Otherwise, will see error:
                         // Template format error: Intrinsic functions in the Hooks block must only contain parameter values, stack metadata or mappings
-                        .beforeAllowTraffic(prefixName("LifecycleHook"))
+                        .beforeAllowTraffic("CodeDeployHook_" + prefixName(""))
                         .build())
                 // Can't use codedeployServiceRole.getRoleName(). Otherwise, will see error:
                 // Template format error: Intrinsic functions in the Hooks block must only contain parameter values, stack metadata or mappings
@@ -226,7 +226,7 @@ public class EcsFargateBGHookStack extends Stack {
 
     private IFunction createLambdaLifecycleHookFunction(String handler) {
         IFunction function = Function.Builder.create(this, "LambdaLifecycleHookFunction")
-                .functionName(prefixName("LifecycleHook"))
+                .functionName("CodeDeployHook_" + prefixName(""))
                 .code(Code.fromAsset("./revisions/lifecyclehooks"))
                 .handler(handler)
                 .runtime(Runtime.PYTHON_3_9)

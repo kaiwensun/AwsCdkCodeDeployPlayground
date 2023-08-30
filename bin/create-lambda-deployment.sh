@@ -113,8 +113,8 @@ appspec=$(jq '.' <<< '
   }],
   "Hooks": [
     {
-     "BeforeAllowTraffic": "CDKLambdaDeploymentStackLifecycleHook"
-   }
+     "BeforeAllowTraffic": "CodeDeployHook_CDKLambdaDeploymentStack"
+    }
   ]
 }
 ')

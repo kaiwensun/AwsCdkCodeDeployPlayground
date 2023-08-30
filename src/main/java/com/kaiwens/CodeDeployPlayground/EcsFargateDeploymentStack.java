@@ -186,7 +186,7 @@ public class EcsFargateDeploymentStack extends Stack {
 
     private IFunction createLambdaLifecycleHookFunction(String handler) {
         IFunction function = Function.Builder.create(this, "LambdaLifecycleHookFunction")
-                .functionName(prefixName("LifecycleHook"))
+                .functionName("CodeDeployHook_" + prefixName(""))
                 .code(Code.fromAsset("./revisions/lifecyclehooks"))
                 .handler(handler)
                 .runtime(Runtime.PYTHON_3_9)
