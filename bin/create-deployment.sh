@@ -8,7 +8,7 @@ ACCOUNT=`aws sts get-caller-identity --query Account --output text`
 
 STACK_NAME=ServerDeploymentStack
 
-pushd $( dirname "${BASH_SOURCE[0]}" )/.. > /dev/null
+pushd $( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )/.. > /dev/null
 
 source bin/utils.sh
 

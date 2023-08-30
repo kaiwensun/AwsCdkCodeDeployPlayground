@@ -4,7 +4,7 @@ set -e
 
 STACK_NAME=EcsFargateDeploymentStack
 
-pushd $( dirname "${BASH_SOURCE[0]}" )/.. > /dev/null
+pushd $( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )/.. > /dev/null
 
 source bin/utils.sh
 
