@@ -104,7 +104,7 @@ appspec=$(jq '.' <<< '
     ],
     "Hooks": [
         {
-            "BeforeInstall": "CodeDeployHook_CDKEcsFargateDeploymentStack"
+            "BeforeInstall": "CodeDeployHook_CdkEcsFargateDeploymentStack"
         }
     ]
 }
