@@ -186,7 +186,7 @@ public class EcsFargateDeploymentStack extends Stack {
 
     private IFunction createLambdaLifecycleHookFunction(String handler) {
         IFunction function = Function.Builder.create(this, "LambdaLifecycleHookFunction")
-                .functionName("CDKManagedEcsDeploymentStackLifecycleHook")
+                .functionName(prefixName("LifecycleHook"))
                 .code(Code.fromAsset("./revisions/lifecyclehooks"))
                 .handler(handler)
                 .runtime(Runtime.PYTHON_3_9)
@@ -194,5 +194,9 @@ public class EcsFargateDeploymentStack extends Stack {
                 .build();
         function.getRole().addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName("AWSCodeDeployFullAccess"));
         return function;
+    }
+
+    private String prefixName(final String name) {
+        return "Cdk" + this.getClass().getSimpleName() + name;
     }
 }

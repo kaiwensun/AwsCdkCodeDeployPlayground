@@ -17,6 +17,7 @@ import software.amazon.awscdk.services.iam.ServicePrincipal;
 import software.amazon.awscdk.services.lambda.Alias;
 import software.amazon.awscdk.services.lambda.Code;
 import software.amazon.awscdk.services.lambda.Function;
+import software.amazon.awscdk.services.lambda.IFunction;
 import software.amazon.awscdk.services.lambda.Runtime;
 import software.amazon.awscdk.services.s3.Bucket;
 import software.amazon.awscdk.services.s3.deployment.BucketDeployment;
@@ -87,6 +88,9 @@ public class LambdaDeploymentStack extends Stack {
                 .alias(alias)
                 .deploymentConfig(LambdaDeploymentConfig.ALL_AT_ONCE)
                 .build();
+
+        createLambdaLifecycleHookFunction("succeeded.lambda_handler");
+
         new CfnOutput(this, "CurrentVersion", CfnOutputProps.builder().value(function.getCurrentVersion().getVersion()).build());
         new CfnOutput(this, "FunctionAlias", CfnOutputProps.builder().value(alias.getAliasName()).build());
         new CfnOutput(this, "FunctionName", CfnOutputProps.builder().value(function.getFunctionName()).build());
@@ -94,5 +98,21 @@ public class LambdaDeploymentStack extends Stack {
         new CfnOutput(this, "DeploymentGroupName", CfnOutputProps.builder().value(deploymentGroup.getDeploymentGroupName()).build());
         new CfnOutput(this, "S3Bucket", CfnOutputProps.builder().value(bucketDeployment.getDeployedBucket().getBucketName()).build());
         new CfnOutput(this, "S3Key", CfnOutputProps.builder().value(Fn.select(0, bucketDeployment.getObjectKeys())).build());
+    }
+
+    private IFunction createLambdaLifecycleHookFunction(String handler) {
+        IFunction function = Function.Builder.create(this, "LambdaLifecycleHookFunction")
+                .functionName(prefixName("LifecycleHook"))
+                .code(Code.fromAsset("./revisions/lifecyclehooks"))
+                .handler(handler)
+                .runtime(Runtime.PYTHON_3_9)
+                .timeout(Duration.seconds(60))
+                .build();
+        function.getRole().addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName("AWSCodeDeployFullAccess"));
+        return function;
+    }
+
+    private String prefixName(final String name) {
+        return "Cdk" + this.getClass().getSimpleName() + name;
     }
 }

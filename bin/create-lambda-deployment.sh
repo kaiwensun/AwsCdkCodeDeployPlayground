@@ -99,21 +99,24 @@ echo "flavor: $from_flavor -> $to_flavor"
 # generate AppSpecContent
 appspec=$(jq '.' <<< '
 {
- 	"version": 0.0,
- 	"Resources": [{
- 		"myLambdaFunction": {
- 			"Type": "AWS::Lambda::Function",
- 			"Properties": {
- 				"Name": "'$FUNCTION_NAME'",
- 				"Alias": "'$FUNCTION_ALIAS'",
- 				"CurrentVersion": "'$from_v'",
- 				"TargetVersion": "'$to_v'"
- 			}
- 		}
- 	}],
- 	"Hooks": [
- 	]
- }
+  "version": 0.0,
+  "Resources": [{
+    "myLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Name": "'$FUNCTION_NAME'",
+        "Alias": "'$FUNCTION_ALIAS'",
+        "CurrentVersion": "'$from_v'",
+        "TargetVersion": "'$to_v'"
+      }
+    }
+  }],
+  "Hooks": [
+    {
+     "BeforeAllowTraffic": "CDKLambdaDeploymentStackLifecycleHook"
+   }
+  ]
+}
 ')
 
 # create deployment
