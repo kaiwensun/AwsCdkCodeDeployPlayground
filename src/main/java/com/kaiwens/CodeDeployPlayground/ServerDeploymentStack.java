@@ -254,7 +254,7 @@ public class ServerDeploymentStack extends Stack {
         String bucketName = String.format("codedeploy-playground.revisions.%s.%s", account, region);
         Bucket.Builder.create(this, "RevisionBucket")
                 .bucketName(bucketName)
-                .versioned(true)
+                .versioned(false)
                 .removalPolicy(RemovalPolicy.DESTROY)
                 .build();
 

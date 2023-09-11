@@ -39,6 +39,7 @@ public class LambdaDeploymentStack extends Stack {
 
         final String bucketName = String.format("codedeploy-playground.lambda.%s.%s", getAccount(), getRegion());
         Bucket s3Bucket = Bucket.Builder.create(this, "LambdaCodeBucket")
+                .versioned(false)
                 .bucketName(bucketName)
                 .build();
         BucketDeployment bucketDeployment = BucketDeployment.Builder.create(this, "CodeA")

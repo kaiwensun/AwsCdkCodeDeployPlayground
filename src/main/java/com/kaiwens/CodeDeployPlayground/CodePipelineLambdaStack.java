@@ -72,6 +72,7 @@ public class CodePipelineLambdaStack extends Stack {
                 .build();
 
         Bucket artifactBucket = Bucket.Builder.create(this, "CdkManagedArtifactBucket")
+                .versioned(false)
                 .bucketName(String.format("CdkManaged-%s-%s-%s", className, getAccount(), getRegion()).toLowerCase())
                 .build();
 
