@@ -86,7 +86,8 @@ public class ServerDeploymentStack extends Stack {
         Role ec2InstanceProfileRole = Role.Builder.create(this, "InstanceProfile")
                 .description("EC2 Instance Profile for CodeDeploy agent, managed by CDK")
                 .assumedBy(ServicePrincipal.Builder.create("ec2.amazonaws.com").build())
-                .managedPolicies(Collections.singletonList(
+                .managedPolicies(Arrays.asList(
+                        ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedEC2InstanceDefaultPolicy"),
                         ManagedPolicy.fromAwsManagedPolicyName("service-role/AmazonEC2RoleforAWSCodeDeployLimited")))
                 .build();
 
