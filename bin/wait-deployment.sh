@@ -2,9 +2,6 @@
 
 set -e
 
-REGION=${AWS_DEFAULT_REGION}
-ACCOUNT=`aws sts get-caller-identity --query Account --output text`
-
 STACK_NAME=ServerDeploymentStack
 
 pushd $( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )/.. > /dev/null
@@ -13,12 +10,8 @@ source bin/utils.sh
 
 stack_outputs=`aws cloudformation describe-stacks --stack-name $STACK_NAME --output json --query Stacks[0].Outputs`
 
-BUCKET_NAME=`get_stack_output S3BucketName`
 CD_APPLICATION_NAME=`get_stack_output ApplicationName`
 CD_DEPLOYMENTGROUP_NAME=`get_stack_output DeploymentGroupName`
-
-timestamp=`date +%Y-%m-%dT%H-%M-%S`
-
 
 deployment_id=`aws deploy list-deployments --application-name "${CD_APPLICATION_NAME}" --deployment-group-name "${CD_DEPLOYMENTGROUP_NAME}" --output text --query 'deployments[0]'`
 
