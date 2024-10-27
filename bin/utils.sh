@@ -6,7 +6,7 @@ function get_stack_output() {
 function get_region() {
   if [[ -n "$AWS_REGION" ]]; then
     echo "$AWS_REGION"
-  elif [[ -n "$AWS_DEFAULT_REGION"]]; then
+  elif [[ -n "$AWS_DEFAULT_REGION" ]]; then
     echo "$AWS_DEFAULT_REGION"
   else
     aws configure get region
