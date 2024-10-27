@@ -23,7 +23,7 @@ export AWS_DEFAULT_REGION=$AWS_REGION
 ```
 or if you would like to use a profile in your `~/.aws/config`
 ```
-source ./bin/export-profile.sh <cli profile name>
+source ./bin/export-profile.sh <cli profile name> [<region overriding the profile region>]
 ```
 
 ### Setup infra
