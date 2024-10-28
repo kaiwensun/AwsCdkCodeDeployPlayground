@@ -2,8 +2,11 @@
 
 set -e
 
+pushd $( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )/.. > /dev/null
+source bin/utils.sh
+
 SOFTWARE=httpd
-REGION=${AWS_DEFAULT_REGION}
+REGION=`get_region`
 ACCOUNT=`aws sts get-caller-identity --query Account --output text`
 
 EC2_BUCKET_NAME="codedeploy-playground.revisions.${ACCOUNT}.${REGION}"
