@@ -3,6 +3,7 @@ package com.kaiwens.CodeDeployPlayground;
 import software.amazon.awscdk.CfnOutput;
 import software.amazon.awscdk.CfnOutputProps;
 import software.amazon.awscdk.RemovalPolicy;
+import software.amazon.awscdk.services.ec2.AmazonLinuxCpuType;
 import software.amazon.awscdk.services.ec2.KeyPair;
 import software.amazon.awscdk.services.ec2.LaunchTemplate;
 import software.amazon.awscdk.services.iam.CompositePrincipal;
@@ -71,7 +72,7 @@ public class ServerDeploymentStack extends Stack {
         CLB
     }
 
-    private final static InstanceType instanceType = InstanceType.of(InstanceClass.BURSTABLE3, InstanceSize.NANO);
+    private final static InstanceType instanceType = InstanceType.of(InstanceClass.BURSTABLE4_GRAVITON, InstanceSize.MICRO);
     private final static String ASG_NAME = "CdkManagedCodeDeployPlaygroundFleet";
 
     public ServerDeploymentStack(final Construct scope, final String id) {
@@ -147,6 +148,7 @@ public class ServerDeploymentStack extends Stack {
                         .machineImage(MachineImage.latestAmazonLinux(
                                 AmazonLinuxImageProps.builder()
                                         .generation(AmazonLinuxGeneration.AMAZON_LINUX_2)
+                                        .cpuType(AmazonLinuxCpuType.ARM_64)
                                         .build()
                         ))
                         .requireImdsv2(true)
