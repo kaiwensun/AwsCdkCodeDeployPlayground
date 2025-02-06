@@ -3,6 +3,8 @@ package com.kaiwens.CodeDeployPlayground;
 import software.amazon.awscdk.CfnOutput;
 import software.amazon.awscdk.CfnOutputProps;
 import software.amazon.awscdk.RemovalPolicy;
+import software.amazon.awscdk.services.ec2.KeyPair;
+import software.amazon.awscdk.services.ec2.LaunchTemplate;
 import software.amazon.awscdk.services.iam.CompositePrincipal;
 import software.amazon.awssdk.utils.ImmutableMap;
 import software.constructs.Construct;
@@ -139,17 +141,19 @@ public class ServerDeploymentStack extends Stack {
 
         AutoScalingGroup asg = AutoScalingGroup.Builder.create(this, "ASG")
                 .autoScalingGroupName(ASG_NAME)
-                .keyName(keyPairName)
-                .instanceType(instanceType)
-                .machineImage(MachineImage.latestAmazonLinux(
-                        AmazonLinuxImageProps.builder()
-                                .generation(AmazonLinuxGeneration.AMAZON_LINUX_2)
-                                .build()
-                ))
-                .requireImdsv2(true)
-                .securityGroup(securityGroup)
-                .role(ec2InstanceProfileRole)
-                .userData(userData)
+                .launchTemplate(LaunchTemplate.Builder.create(this, "LaunchTemplate")
+                        .keyPair(KeyPair.fromKeyPairName(this, "keyPair", keyPairName))
+                        .instanceType(instanceType)
+                        .machineImage(MachineImage.latestAmazonLinux(
+                                AmazonLinuxImageProps.builder()
+                                        .generation(AmazonLinuxGeneration.AMAZON_LINUX_2)
+                                        .build()
+                        ))
+                        .requireImdsv2(true)
+                        .securityGroup(securityGroup)
+                        .role(ec2InstanceProfileRole)
+                        .userData(userData)
+                        .build())
                 .vpc(vpc)
                 .build();
         final String applicationName = "CdkManagedServerApplication";
