@@ -4,6 +4,7 @@ import software.amazon.awscdk.CfnOutput;
 import software.amazon.awscdk.CfnOutputProps;
 import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.Fn;
+import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.codedeploy.ILambdaApplication;
@@ -40,6 +41,8 @@ public class LambdaDeploymentStack extends Stack {
         final String bucketName = String.format("codedeploy-playground.lambda.%s.%s", getAccount(), getRegion());
         Bucket s3Bucket = Bucket.Builder.create(this, "LambdaCodeBucket")
                 .versioned(false)
+                .autoDeleteObjects(true)
+                .removalPolicy(RemovalPolicy.DESTROY)
                 .bucketName(bucketName)
                 .build();
         BucketDeployment bucketDeployment = BucketDeployment.Builder.create(this, "CodeA")

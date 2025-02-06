@@ -1,6 +1,7 @@
 package com.kaiwens.CodeDeployPlayground;
 
 import software.amazon.awscdk.Duration;
+import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.codebuild.BuildEnvironmentVariable;
@@ -73,6 +74,8 @@ public class CodePipelineLambdaStack extends Stack {
 
         Bucket artifactBucket = Bucket.Builder.create(this, "CdkManagedArtifactBucket")
                 .versioned(false)
+                .autoDeleteObjects(true)
+                .removalPolicy(RemovalPolicy.DESTROY)
                 .bucketName(String.format("CdkManaged-%s-%s-%s", className, getAccount(), getRegion()).toLowerCase())
                 .build();
 
