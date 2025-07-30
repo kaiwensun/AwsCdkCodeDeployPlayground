@@ -91,6 +91,7 @@ public class ServerDeploymentStack extends Stack {
                 .assumedBy(ServicePrincipal.Builder.create("ec2.amazonaws.com").build())
                 .managedPolicies(Arrays.asList(
                         ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedEC2InstanceDefaultPolicy"),
+                        ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedInstanceCore"),
                         ManagedPolicy.fromAwsManagedPolicyName("service-role/AmazonEC2RoleforAWSCodeDeployLimited")))
                 .build();
 
